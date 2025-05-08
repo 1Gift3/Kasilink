@@ -4,7 +4,7 @@ from .schemas import PostSchema
 from flask_jwt_extended import jwt_required, get_jwt_identity
 
 
-posts_bp = Blueprint('/posts', __name__)
+posts_bp = Blueprint('posts_bp', __name__, url_prefix='/posts')
 post_schema = PostSchema()
 posts_schema = PostSchema(many=True)
 
@@ -21,15 +21,23 @@ def get_posts():
 
 
 @posts_bp.route('/posts', methods=['POST'])
+@jwt_required()
 def create_post():
+    user_id = get_jwt_identity()
     data = request.get_json()
+    
     errors = post_schema.validate(data)
     if errors:
         return jsonify(errors), 400
 
-    new_post = Post(**data)
+    # Manually assign user_id to the post
+    new_post = Post(title=data['title'], content=data['content'], user_id=user_id)
+
     db.session.add(new_post)
     db.session.commit()
 
     return jsonify(post_schema.dump(new_post)), 201
+
+
+
 
