@@ -1,12 +1,12 @@
 from flask import Blueprint, request, jsonify
 from .models import Post, db
-from .schemas import PostSchema
+from .schemas import PostSchema, SimplePostSchema
 from flask_jwt_extended import jwt_required, get_jwt_identity
 
 
 posts_bp = Blueprint('posts_bp', __name__, url_prefix='/posts')
 post_schema = PostSchema()
-posts_schema = PostSchema(many=True)
+#posts_schema = PostSchema(many=True)
 
 @posts_bp.route('/protected', methods=['GET'])
 @jwt_required()
@@ -14,10 +14,15 @@ def protected_route():
     user_id = get_jwt_identity()
     return jsonify(msg=f"Hello, user {user_id}")
 
-@posts_bp.route('/posts', methods=['GET'])
-def get_posts():
-    all_posts = Post.query.all()
-    return jsonify(posts_schema.dump(all_posts)), 200
+#@posts_bp.route('/posts', methods=['GET'])
+#def get_posts():
+#    all_posts = Post.query.all()
+#    return jsonify(posts_schema.dump(all_posts)), 200
+
+@posts_bp.route('/test', methods=['POST'])
+def test_post():
+    return jsonify({"msg": "Test route is working!"}), 200
+
 
 
 @posts_bp.route('/posts', methods=['POST'])
@@ -28,10 +33,15 @@ def create_post():
     
     errors = post_schema.validate(data)
     if errors:
-        return jsonify(errors), 400
+         print("Validation errors:", errors)
+         return jsonify(errors), 400
 
-    # Manually assign user_id to the post
-    new_post = Post(title=data['title'], content=data['content'], user_id=user_id)
+    
+    new_post = Post(
+        title=data['title'],
+        content=data['content'],
+        user_id=user_id
+    )
 
     db.session.add(new_post)
     db.session.commit()

@@ -1,9 +1,13 @@
 from flask import Blueprint, request, jsonify
 from werkzeug.security import generate_password_hash, check_password_hash
-from flask_jwt_extended import create_access_token
+from flask_jwt_extended import create_access_token, jwt_required, get_jwt_identity
 from .models import db, User
 
+
+
 auth_bp = Blueprint('auth_bp', __name__)
+
+
 
 @auth_bp.route('/register', methods=['POST'])
 def register():
@@ -18,6 +22,7 @@ def register():
 
         hashed_pw = generate_password_hash(data['password'])
         new_user = User(username=data['username'], password=hashed_pw)
+        
         db.session.add(new_user)
         db.session.commit()
 
@@ -38,7 +43,7 @@ def login():
         if not user or not check_password_hash(user.password, data['password']):
             return jsonify({"msg": "Invalid credentials"}), 401
 
-        access_token = create_access_token(identity=user.id)
+        access_token = create_access_token(identity=str(user.id))
         return jsonify(access_token=access_token), 200
 
     except Exception as e:
