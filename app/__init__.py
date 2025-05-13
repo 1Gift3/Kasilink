@@ -15,8 +15,8 @@ def create_app():
     migrate.init_app(app, db)
     jwt.init_app(app)
 
-    
-    app.register_blueprint(posts_bp)
+    app.register_blueprint(posts_bp, url_prefix='/posts')
+    #app.register_blueprint(posts_bp)
     app.register_blueprint(auth_bp)
     
 
