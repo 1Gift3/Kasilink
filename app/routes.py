@@ -3,6 +3,7 @@ from .models import Post, db
 from .schemas import PostSchema, SimplePostSchema
 from flask_jwt_extended import jwt_required, get_jwt_identity
 from flask_sqlalchemy import SQLAlchemy
+from .extensions import logger
 
 
 posts_bp = Blueprint('posts_bp', __name__, url_prefix='/posts')
@@ -45,7 +46,7 @@ def create_post():
             return {"message": f"User with ID {user_id} not found."}, 404  # Return 404 if user does not exist
         
         # Create a new post instance if the user exists
-        post = Post(**post_data)
+        #post = Post(**post_data)
         
         # Create a new post instance
         post = Post(**post_data)
@@ -54,11 +55,13 @@ def create_post():
         db.session.commit()
 
         return jsonify(post_schema.dump(post)), 201
+    
     except Exception as e:
+        db.session.rollback()
         # Log or print the exception to get more insight into what's failing
-        print(f"Error: {e}")
-        return {"message": "Error creating post"}, 500
+        current_app.logger.error(f"Error: {e}")
+        return jsonify({"message": "Error creating post"}), 500
 
-
-
+        logger.info("This is a test log")
+        logger.error("Something went wrong")
 

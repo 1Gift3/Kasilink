@@ -5,6 +5,7 @@ from .extensions import db
 
 
 class PostSchema(SQLAlchemyAutoSchema):
+    user_id = fields.Integer(required=True) 
     class Meta:
         model = Post
         load_instance = True
