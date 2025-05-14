@@ -10,6 +10,7 @@ class PostSchema(SQLAlchemyAutoSchema):
         load_instance = True
         include_fk = True  # Ensure foreign keys are included
     
+    user_id = fields.Integer(dump_only=True) 
     user = fields.Nested('UserSchema', only=['username'])  # Include nested user data
 
 class UserSchema(SQLAlchemyAutoSchema):
