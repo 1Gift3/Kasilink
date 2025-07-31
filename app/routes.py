@@ -1,5 +1,5 @@
 from flask import Blueprint, request, jsonify, current_app
-from .models import Post, db
+from .models import User, Post, db
 from .schemas import PostSchema, SimplePostSchema
 from flask_jwt_extended import jwt_required, get_jwt_identity
 from flask_sqlalchemy import SQLAlchemy
@@ -40,7 +40,7 @@ def create_post():
         user_id = post_data.get('user_id')
         
         # Check if the user exists in the database
-        user = user.query.get(user_id)  # Fetch the user by user_id
+        user = User.query.get(user_id)  # Fetch the user by user_id
         
         if not user:
             return {"message": f"User with ID {user_id} not found."}, 404  # Return 404 if user does not exist
@@ -59,9 +59,5 @@ def create_post():
     except Exception as e:
         db.session.rollback()
         # Log or print the exception to get more insight into what's failing
-        current_app.logger.error(f"Error: {e}")
+        current_app.logger.error(f"Error creating post: {e}")
         return jsonify({"message": "Error creating post"}), 500
-
-        logger.info("This is a test log")
-        logger.error("Something went wrong")
-

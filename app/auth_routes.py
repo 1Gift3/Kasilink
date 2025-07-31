@@ -53,8 +53,9 @@ def login():
             return jsonify({"msg": "Missing username or password"}), 400
 
         user = User.query.filter_by(username=data['username']).first()
-        if not user or not username or not password:
+        if not user or not pwd_context.verify(password, user.password):
             return jsonify({"msg": "Invalid credentials"}), 401
+
 
         access_token = create_access_token(identity=str(user.id))
         return jsonify(access_token=access_token), 200
