@@ -46,13 +46,13 @@ def login():
     try:
         data = request.get_json()
 
-        username = data.get('username')
+        username = data.get('email')
         password = data.get('password')
 
         if not username or not password:
-            return jsonify({"msg": "Missing username or password"}), 400
+            return jsonify({"msg": "Missing email or password"}), 400
 
-        user = User.query.filter_by(username=data['username']).first()
+        user = User.query.filter_by(email=data['email']).first()
         if not user or not pwd_context.verify(password, user.password):
             return jsonify({"msg": "Invalid credentials"}), 401
 
@@ -62,8 +62,8 @@ def login():
 
     except Exception as e:
         return jsonify({"error": str(e)}), 500
-    
-    print("Incoming username:", data['username'])
+
+    print("Incoming email:", data['email'])
     print("Incoming password:", data['password'])
     print("Stored hash:", user.password)
 
