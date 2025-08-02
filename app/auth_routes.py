@@ -1,3 +1,4 @@
+import email
 from flask import Blueprint, request, jsonify
 from werkzeug.security import generate_password_hash, check_password_hash
 from flask_jwt_extended import create_access_token, jwt_required, get_jwt_identity
@@ -16,25 +17,23 @@ auth_bp = Blueprint('auth_bp', __name__, url_prefix='/auth')
 def register():
     try:
         data = request.get_json()
-
         username = data.get('username')
         password = data.get('password')
 
-        if not username or not password:
-            return jsonify({"msg": "Missing username or password"}), 400
+        if not username or not email or not password:
+            return jsonify({'error': 'Missing fields'}), 400
 
           
-        if User.query.filter_by(username=data['username']).first():
-            return jsonify({"msg": "User already exists"}), 409
+        if User.query.filter_by(username=username).first():
+            return jsonify({'error': 'Username already exists'}), 400
 
-        hashed_pw = pwd_context.hash(data['password']) 
-        new_user = User(username=data['username'], password=hashed_pw)
+        user = User(username=username, email=email)
+        user.set_password(password)
         
-        db.session.add(new_user)
+        db.session.add(user)
         db.session.commit()
 
-        return jsonify({"msg": "User created successfully"}), 201
-     
+        return jsonify({"msg": "User registered successfully"}), 201
 
     except Exception as e:
         return jsonify({"error": str(e)}), 500
@@ -45,15 +44,12 @@ def register():
 def login():
     try:
         data = request.get_json()
-
-        username = data.get('email')
+        username = data.get('username')
         password = data.get('password')
 
-        if not username or not password:
-            return jsonify({"msg": "Missing email or password"}), 400
+        user = User.query.filter_by(username=username).first()
 
-        user = User.query.filter_by(email=data['email']).first()
-        if not user or not pwd_context.verify(password, user.password):
+        if not user or not user.check_password(password):
             return jsonify({"msg": "Invalid credentials"}), 401
 
 
