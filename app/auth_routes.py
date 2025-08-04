@@ -66,3 +66,28 @@ def login():
 
     result = pwd_context.verify(data['password'], user.password)
     print("Password verified:", result)
+
+@auth_bp.route('/me', methods=['GET'])
+@jwt_required()
+def get_profile():
+    user_id = get_jwt_identity()
+    user = User.query.get(user_id)
+    return jsonify({
+        "username": user.username,
+        "email": user.email
+    })
+
+@auth_bp.route('/me', methods=['PUT'])
+@jwt_required()
+def update_profile():
+    user_id = get_jwt_identity()
+    data = request.get_json()
+
+    user = User.query.get(user_id)
+    if 'email' in data:
+        user.email = data['email']
+    if 'password' in data:
+        user.set_password(data['password'])
+        
+    db.session.commit()
+    return jsonify({"msg": "Profile updated successfully"}), 200

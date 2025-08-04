@@ -14,7 +14,19 @@ post_schema = PostSchema(session=db.session)
 @jwt_required()
 def protected_route():
     user_id = get_jwt_identity()
-    return jsonify(msg=f"Hello, user {user_id}"), 200
+    user = User.query.get(user_id)
+    if not user:
+        return jsonify(msg="User not found"), 404
+    
+
+    return jsonify({
+        "msg": "Access Granted",
+         "user": {
+            "id": user.id,
+            "username": user.username,
+            "email": user.email
+         } 
+     }), 200
     #return jsonify(msg=f"Hello, user {user_id}, you're successfully authenticated!"), 200
 
 #@posts_bp.route('/posts', methods=['GET'])
