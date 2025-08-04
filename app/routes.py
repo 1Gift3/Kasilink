@@ -73,3 +73,6 @@ def create_post():
         # Log or print the exception to get more insight into what's failing
         current_app.logger.error(f"Error creating post: {e}")
         return jsonify({"message": "Error creating post"}), 500
+    
+
+ 

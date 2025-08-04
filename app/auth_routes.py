@@ -77,17 +77,49 @@ def get_profile():
         "email": user.email
     })
 
-@auth_bp.route('/me', methods=['PUT'])
+@auth_bp.route('/profile' , methods=['PUT'])
 @jwt_required()
 def update_profile():
     user_id = get_jwt_identity()
     data = request.get_json()
 
     user = User.query.get(user_id)
-    if 'email' in data:
-        user.email = data['email']
-    if 'password' in data:
-        user.set_password(data['password'])
+    if not user:
+        return jsonify({"msg": "User not found"}), 404
+
+    data = request.get_json()
+    username = data.get('username')
+    email = data.get('email')
+
+    if 'username' in data:
+        user.username = data['username']
+    if 'email':
+        user.email = email
         
     db.session.commit()
-    return jsonify({"msg": "Profile updated successfully"}), 200
+
+    return jsonify({"msg": "Profile updated successfully"}), 200  
+
+@auth_bp.route('/change-password', methods=['PUT'])
+@jwt_required()
+def change_password():
+    user_id = get_jwt_identity()
+    user = User.query.get(user_id)
+
+    if not user:
+        return jsonify({'error': 'User not found'}), 404
+
+    data = request.get_json()
+    current_password = data.get('current_password')
+    new_password = data.get('new_password')
+
+    if not current_password or not new_password:
+        return jsonify({'error': 'Both current and new passwords are required'}), 400
+
+    if not user.check_password(current_password):
+        return jsonify({'error': 'Current password is incorrect'}), 401
+
+    user.set_password(new_password)
+    db.session.commit()
+
+    return jsonify({'msg': 'Password changed successfully'}), 200
