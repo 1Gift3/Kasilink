@@ -1,79 +1,115 @@
-## 🪴 KasiLink
+Kasilink
+A Flask-based backend API for managing user authentication, posting, and protected routes—powered by JWT auth and PostgreSQL.
 
-**KasiLink** is a platform connecting communities with local services and opportunities. Built using Flask as the backend foundation.
-
----
-
-### 🚀 Tech Stack
-
-* **Backend**: Python, Flask
-* **Database**: SQLAlchemy (PostgreSQL )
-* **Deployment**: (to be added — Heroku, Render, etc.)
-* **Other tools**: dotenv, Flask-Migrate, etc.
-
-
-
-📁 Project Structure
-
-
+🗂 Project Structure
+arduino
+Copy
+Edit
 kasilink/
-├── app/
-│   ├── __init__.py
-│   ├── routes.py
-│   ├── models.py
-│   └── db.py
-├── config.py
 ├── run.py
+├── config.py
 ├── requirements.txt
-└── README.md
+└── app/
+    ├── __init__.py
+    ├── extensions.py
+    ├── models.py
+    ├── schemas.py
+    └── routes/
+        ├── __init__.py
+        ├── auth_routes.py
+        └── posts_routes.py
 
 
-✅ Getting Started
+⚙️ Key Features
+Secure user registration and login using password hashing (werkzeug.security)
 
-1. **Clone the repo**
+JWT-based authentication for protected routes
 
-   ```bash
-   git clone https://github.com/1Gift3/Kasilink.git
-   cd Kasilink
-   ```
+CRUD-post model resources connected to authenticated users
 
-2. **Create a virtual environment**
+PostgreSQL integration with Flask‑Migrate for migrations
 
-   ```bash
-   python -m venv venv
-   source venv/bin/activate  # on Windows: venv\Scripts\activate
-   ```
+User profile routes: Fetch and update account info, change password
 
-3. **Install dependencies**
 
-   ```bash
-   pip install -r requirements.txt
-   ```
+🚀 Setup & Run Locally
+Clone the repo:
 
-4. **Run the app**
+bash
+Copy
+Edit
+git clone https://github.com/1Gift3/Kasilink.git
+cd Kasilink
+Create and activate your virtual environment:
 
-   ```bash
-   flask run
-   ```
+bash
+Copy
+Edit
+python -m venv venv
+.\venv\Scripts\activate  # Windows
+Install dependencies:
 
----
+bash
+Copy
+Edit
+pip install -r requirements.txt
+Configure PostgreSQL in config.py (set SQLALCHEMY_DATABASE_URI, JWT_SECRET_KEY).
 
-🧱 Future Features (Phase 2+)
+Run database migrations:
 
-* User registration & authentication
-* Role-based access (e.g., user vs vendor)
-* Messaging / Notifications
+bash
+Copy
+Edit
+flask db upgrade
+Start the app:
 
----
+bash
+Copy
+Edit
+python run.py
 
-### 🧪 Testing
 
-*TODO: Add test instructions once test suite is built.*
+🧪 API Endpoints
+Authentication (open):
 
----
+POST /auth/register – Register user
 
-### 👤 Author
+POST /auth/login – Login and receive access_token
 
-**Gift** — [@1Gift3](https://github.com/1Gift3)
+Profile (requires auth):
 
+GET /auth/profile – Get current user info
+
+PUT /auth/profile – Update username/email
+
+PUT /auth/change-password – Update password securely
+
+Posts (requires auth):
+
+GET /posts/protected – Sample protected endpoint
+
+POST /posts – Create a post linked to authenticated user
+
+Make sure to include JWT token in headers as:
+
+makefile
+Copy
+Edit
+Authorization: Bearer <your_access_token>
+
+
+📈 Future Enhancements
+Add GET /posts, GET /posts/<id>, DELETE /posts/<id>
+
+Add pagination and filtering (e.g., posts by user)
+
+Add Jinja2 templates or a separate frontend (React, Vue, etc.)
+
+Deploy to Render or Railway with managed PostgreSQL
+
+Add tests using pytest and API documentation (Swagger/OpenAPI)
+
+✅ License & Contact
+Under MIT License.
+Feel free to contribute or ask questions!
 
