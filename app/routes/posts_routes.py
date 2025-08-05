@@ -1,9 +1,9 @@
 from flask import Blueprint, request, jsonify, current_app
-from .models import User, Post, db
-from .schemas import PostSchema, SimplePostSchema
+from ..models import User, Post, db
+from ..schemas import PostSchema, SimplePostSchema
 from flask_jwt_extended import jwt_required, get_jwt_identity
-from flask_sqlalchemy import SQLAlchemy
-from .extensions import logger
+from ..extensions import logger
+
 
 
 posts_bp = Blueprint('posts_bp', __name__, url_prefix='/posts')
@@ -40,7 +40,7 @@ def test_post():
 
 
 
-@posts_bp.route('/posts', methods=['POST'])
+@posts_bp.route('/', methods=['POST'])
 @jwt_required()
 def create_post():
     post_schema = PostSchema()
@@ -49,19 +49,14 @@ def create_post():
         post_data = post_schema.load(request.get_json())
 
         # Get the user_id from the request data
-        user_id = post_data.get('user_id')
+        user_id = get_jwt_identity()
         
-        # Check if the user exists in the database
-        user = User.query.get(user_id)  # Fetch the user by user_id
-        
-        if not user:
-            return {"message": f"User with ID {user_id} not found."}, 404  # Return 404 if user does not exist
-        
-        # Create a new post instance if the user exists
-        #post = Post(**post_data)
-        
-        # Create a new post instance
-        post = Post(**post_data)
+        # Load the post data from the request, excluding user_id
+        post_data = request.get_json()
+        post_data['user_id'] = user_id  # Inject the authenticated user_id
+
+        # Validate and deserialize the input data
+        post = post_schema.load(post_data)
 
         db.session.add(post)
         db.session.commit()
@@ -74,5 +69,3 @@ def create_post():
         current_app.logger.error(f"Error creating post: {e}")
         return jsonify({"message": "Error creating post"}), 500
     
-
- 

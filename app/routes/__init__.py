@@ -1,7 +1,7 @@
 from flask import Flask
-from .extensions import db, migrate, jwt
-from .routes.auth_routes import auth_bp
-from .routes.posts_routes import posts_bp
+from app.extensions import db, migrate, jwt
+from .auth_routes import auth_bp
+from .posts_routes import posts_bp
 
 
 

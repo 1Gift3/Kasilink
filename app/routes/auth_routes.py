@@ -2,11 +2,10 @@ import email
 from flask import Blueprint, request, jsonify
 from werkzeug.security import generate_password_hash, check_password_hash
 from flask_jwt_extended import create_access_token, jwt_required, get_jwt_identity
-from .models import db, User
+from ..models import db, User, Post
+from ..schemas import PostSchema
 from passlib.context import CryptContext
-from .utils.security import pwd_context
-
-
+from ..utils.security import pwd_context
 
 
 auth_bp = Blueprint('auth_bp', __name__, url_prefix='/auth')
