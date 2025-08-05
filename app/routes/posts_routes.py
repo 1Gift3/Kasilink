@@ -1,8 +1,9 @@
-from flask import Blueprint, request, jsonify, current_app
+from flask import Blueprint, request, jsonify, current_app, abort
 from ..models import User, Post, db
 from ..schemas import PostSchema, SimplePostSchema
 from flask_jwt_extended import jwt_required, get_jwt_identity
 from ..extensions import logger
+from marshmallow import ValidationError
 
 
 
@@ -43,29 +44,81 @@ def test_post():
 @posts_bp.route('/', methods=['POST'])
 @jwt_required()
 def create_post():
-    post_schema = PostSchema()
     try:
-        # Load the post data from the request
-        post_data = post_schema.load(request.get_json())
-
-        # Get the user_id from the request data
         user_id = get_jwt_identity()
-        
-        # Load the post data from the request, excluding user_id
         post_data = request.get_json()
-        post_data['user_id'] = user_id  # Inject the authenticated user_id
 
-        # Validate and deserialize the input data
+        # Validate incoming data (without user_id)
         post = post_schema.load(post_data)
+
+        # Set the user_id securely from JWT
+        post.user_id = user_id
 
         db.session.add(post)
         db.session.commit()
 
         return jsonify(post_schema.dump(post)), 201
-    
+
+    except ValidationError as ve:
+        return jsonify({"errors": ve.messages}), 400
+
     except Exception as e:
         db.session.rollback()
-        # Log or print the exception to get more insight into what's failing
         current_app.logger.error(f"Error creating post: {e}")
         return jsonify({"message": "Error creating post"}), 500
+
+        
     
+@posts_bp.route('/', methods=['GET'])
+def get_posts():
+    posts = Post.query.all()
+    posts_schema = PostSchema(many=True)
+    return jsonify(posts_schema.dump(posts)), 200
+
+
+@posts_bp.route('/<int:post_id>', methods=['GET'])
+def get_post(post_id):
+    post = Post.query.get_or_404(post_id)
+    post_schema = PostSchema()
+    return jsonify(post_schema.dump(post)), 200
+
+
+@posts_bp.route('/<int:post_id>', methods=['PUT'])
+@jwt_required()
+def update_post(post_id):
+    user_id = get_jwt_identity()
+    post = Post.query.get_or_404(post_id)
+
+    if post.user_id != user_id:
+        return jsonify({"msg": "Unauthorized"}), 403
+
+    data = request.get_json()
+    post_schema = PostSchema(partial=True)
+
+    try:
+        updated_post = post_schema.load(data, instance=post, session=db.session)
+        db.session.commit()
+        return jsonify(post_schema.dump(updated_post)), 200
+    except Exception as e:
+        db.session.rollback()
+        current_app.logger.error(f"Error updating post: {e}")
+        return jsonify({"msg": "Error updating post"}), 500
+
+
+@posts_bp.route('/<int:post_id>', methods=['DELETE'])
+@jwt_required()
+def delete_post(post_id):
+    user_id = get_jwt_identity()
+    post = Post.query.get_or_404(post_id)
+
+    if post.user_id != user_id:
+        return jsonify({"msg": "Unauthorized"}), 403
+
+    try:
+        db.session.delete(post)
+        db.session.commit()
+        return jsonify({"msg": "Post deleted"}), 200
+    except Exception as e:
+        db.session.rollback()
+        current_app.logger.error(f"Error deleting post: {e}")
+        return jsonify({"msg": "Error deleting post"}), 500

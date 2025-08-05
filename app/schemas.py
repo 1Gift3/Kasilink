@@ -5,24 +5,24 @@ from .extensions import db
 
 
 class PostSchema(SQLAlchemyAutoSchema):
-    user_id = fields.Integer(required=True) 
     class Meta:
         model = Post
         load_instance = True
-        include_fk = True  # Ensure foreign keys are included
-    
-    user_id = fields.Integer(dump_only=True) 
-    user = fields.Nested('UserSchema', only=['username'])  # Include nested user data
+        include_fk = True
+        sqla_session = db.session
+
+    user = fields.Nested('UserSchema', only=['username'])  # shows username from related user
+    user_id = fields.Integer(dump_only=True)  # don't expect user_id in incoming JSON
 
 class UserSchema(SQLAlchemyAutoSchema):
     class Meta:
         model = User
         load_instance = True
         sqla_session = db.session
-        exclude = ("password",)  # Optional: hides password in response        
 
 class SimplePostSchema(Schema):
     title = fields.Str(required=True)
     content = fields.Str(required=True)
+
 
 
