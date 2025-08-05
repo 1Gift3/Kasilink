@@ -262,67 +262,505 @@ Built a simple HTML form to create a post and display the list of posts.
 - **Next Step**: Make UI mobile-responsive, and add basic filter options.
 
 
+**May 13, 2025**
+### Step 1: Ensuring Password Hash Format Consistency
 
-Summary for Tomorrow’s Continuation
-Tomorrow, you can continue your progress from this point with the following next steps:
+---
 
-Flask Migrations:
-Set up Flask-Migrate to handle database schema changes and migrations. This will allow you to make changes to your models and keep track of changes in the database schema.
+**What Was Happening:**
+In the initial code, we were using `generate_password_hash()` from **Werkzeug** for password hashing during user registration. This method uses **PBKDF2** by default and generates password hashes in the format:
 
-Steps:
+```
+pbkdf2:sha256:...$<salt>$<hash>
+```
 
-Install Flask-Migrate if not already installed.
+However, for **login**, we were trying to verify passwords using **`passlib.scrypt`**, which generates a different hash format:
 
-Initialize the migration folder and perform the first migration.
+```
+scrypt:32768:8:1$<salt>$<hash>
+```
 
-Learn to use flask db migrate, flask db upgrade, and flask db downgrade for easy database migrations.
+Since the two hash formats were incompatible, when a user tried to log in, the password verification failed even if the credentials were correct. This caused the login to fail with a **401 Unauthorized** error, even though the **username existed** in the database.
 
-Authentication:
-Add JWT Authentication (e.g., with Flask-JWT-Extended) to secure your endpoints. This will allow users to register, log in, and access secure routes with a token.
+---
 
-Steps:
+**What Went Wrong:**
+The root cause of the issue was **inconsistent hashing algorithms**. On registration, the password was hashed using Werkzeug’s `generate_password_hash()` method, but on login, we were trying to verify the password using `passlib.scrypt`, which expects a hash in a **completely different format**.
 
-Install Flask-JWT-Extended.
+* The **Werkzeug** hash format (`pbkdf2:sha256`) wasn't compatible with **passlib's scrypt** hash (`scrypt:`).
+* The login route tried to use **`passlib.scrypt`**’s `.verify()` method, but it couldn't match the password input with the incorrectly formatted hash stored in the database.
 
-Implement routes for user registration and login.
+---
 
-Protect routes with JWT token authentication.
+**What I Learned:**
 
-Write More Tests:
-Continue writing unit tests using pytest to test both your routes (e.g., POST and GET requests) and authentication flow. Testing your application will ensure that it behaves as expected and will help prevent errors when scaling.
+1. **Consistency Is Crucial**: When working with password hashing, **both the registration and login processes must use the same hashing algorithm**. Mixing different hashing algorithms (like `PBKDF2` and `scrypt`) leads to verification issues, which is exactly what happened.
+
+2. **`passlib` Over `Werkzeug`**: Switching to `passlib.scrypt` for password hashing ensures **better control** and security. **`passlib`** provides strong cryptographic support with various algorithms like **`scrypt`**, which is more secure than **PBKDF2** for modern applications.
+
+3. **Migration for Existing Users**: If you have existing users who were hashed using a different method (like `generate_password_hash()`), you need to either:
+
+   * **Rehash** their passwords with the new method, or
+   * **Delete and re-register** them, as I did during testing.
+
+4. **Debugging Skills**: The process helped me understand how to debug password authentication failures — logging the hashed password and the input password made it clear where the mismatch occurred.
+
+--
+
+**What Should Be Done Going Forward:**
+
+1. **Ensure Hash Format Consistency**: Always use the same hashing algorithm for both registration and login (in this case, `passlib.scrypt`).
+
+2. **Handle Password Migration**: When switching hashing algorithms, ensure you have a strategy for handling existing user records — either by re-hashing their passwords or prompting them to reset their password.
+
+3. **Thorough Testing**: Always test registration and login after implementing changes, especially when dealing with authentication and security mechanisms. This helps catch errors like format mismatches early.
+
+---
+**Part 2**
+
+### ✅ Step 2 Recap: Verifying the Login Flow & JWT Authentication
+
+---
+
+### 🧩 **What Was Happening**
+
+After getting registration and login working, you received a JWT token — but when trying to access your `/protected` route:
+
+* You initially got a **404 Not Found**, which meant the route URL was incorrect.
+* Then, when you fixed the URL, you ran into `"Invalid crypto padding"`, meaning the token in your request was malformed or corrupted.
+* After correcting the request format (method, header, and full token), the protected route finally worked and returned a valid response — `"Hello, user 5"`.
+
+---
+
+### ❌ **What Went Wrong**
+
+1. **Incorrect Route Access**
+   You were trying to access `/protected`, but your route was actually under `/posts/protected` because of the blueprint prefix. Flask couldn't find the route, leading to a 404.
+
+2. **Wrong HTTP Method & Payload**
+   You initially used `POST` with a body. But the route only accepted `GET`, and JWTs must be passed in the `Authorization` header — not the body.
+
+3. **Malformed JWT Token**
+   A copy-paste error or partial token led to `"Invalid crypto padding"` — which is a cryptographic error from trying to decode a broken token.
+
+---
+
+### 💡 **What I Learned**
+
+1. ✅ **JWTs must be passed via headers**, not in the body, using:
+
+   ```
+   Authorization: Bearer <your_token>
+   ```
+
+2. ✅ **Blueprint URL prefixes affect your routes**. If your blueprint uses `url_prefix='/posts'`, all routes inside it are accessed with that prefix.
+
+3. ✅ **Flask-JWT-Extended handles a lot of security for you**, like checking for missing/expired/invalid tokens and returning appropriate errors.
+
+4. ✅ **Testing JWT-protected routes involves careful attention to method, URL, and headers** — even small mistakes (like a missing space) can break it.
+
+---
+
+### 🔐 Final Result
+
+You successfully authenticated a user, verified the access token, and used it to access a protected route — which is the core of modern token-based authentication systems.
+
+You're now fully set up to:
+
+* Protect APIs
+* Personalize responses by user ID
+* Scale your app securely
+
+---
+
+🔹 2. Open PowerShell and test:
+powershell
+Copy
+Edit
+psql --version
+If that works, then run:
+
+powershell
+Copy
+Edit
+psql -U postgres -d kasilink -h localhost -p 5432
+Once inside psql, check for your users table:
+
+sql
+Copy
+Edit
+\dt                -- shows tables
+SELECT * FROM users;
+If the table doesn't exist yet:
+
+🔹 3. Create the table from Flask:
+powershell
+Copy
+Edit
+$env:FLASK_APP = "app:create_app"
+flask shell
+Then in Python:
+
+python
+Copy
+Edit
+from app import db
+db.create_all()
+After that, go back to psql and re-check with \dt and SELECT * FROM users;.
 
 
-Here's a clear and ready-to-use prompt you can use tomorrow to pick up exactly where you left off:
+*** Part 3 ***
 
+Database Structure Check
+🔍 What Was Happening
+You were able to register users and log in via Postman.
+
+You got valid JWT tokens (meaning the database was working under Flask).
+
+But you couldn’t see your users or tables in psql, and were unsure how to inspect your database directly.
+
+❌ What Went Wrong
+psql wasn't installed or in your system’s PATH.
+
+You accidentally tried to run psql inside the Python shell.
+
+PostgreSQL client tools were missing or not yet active due to no restart.
+
+✅ What You Learned
+bash, PowerShell, and psql each have specific roles — they are not interchangeable.
+
+Flask can work with the database without you ever touching psql, but to inspect the data directly, psql is essential.
+
+To view DB records manually, you need:
+
+PostgreSQL tools like psql
+
+Your tables created via db.create_all()
+
+A working DB URI in Flask
+
+Restarting your machine is often necessary to apply system PATH changes.
+
+
+*** 14 May 2025 ***
+
+🧠 What i Learned
+Schema Design Matters
+When using marshmallow_sqlalchemy.SQLAlchemyAutoSchema, fields like user_id are inferred but still require correct setup (e.g., include_fk=True) or explicit definition.
+
+JWT Integration Best Practices
+It's best to avoid trusting the client with user_id. Instead, extract it securely from the JWT using get_jwt_identity().
+
+Validation Needs a Session
+Marshmallow with load_instance=True needs a DB session for validation. If not set properly, you’ll get "Validation requires a session" errors.
+
+Explicit Error Handling is Crucial
+Catching exceptions, logging them, and rolling back DB sessions prevents silent failures and helps during debugging.
+
+404 vs. 500 Confusion
+
+404 (Not Found) = route or URL is incorrect.
+
+500 (Internal Server Error) = something went wrong in the code logic, often in DB or schema handling.
+
+🧨 What Went Wrong
+Initially, your schema was trying to validate a user_id that was injected from JWT but also passed (or missing) in the request payload, causing Unknown field or Missing data errors.
+
+You received a 500 error due to Marshmallow raising ValueError: Validation requires a session because the schema tried to validate with load_instance=True but didn’t have an active SQLAlchemy session.
+
+There was also some route confusion (/posts, /posts/posts) which led to 404 errors.
+
+
+** pArt 2 **
+
+📖 What Happened
+Today, you focused on getting your /posts endpoint to work correctly in your Flask API. You:
+
+Created a protected route to allow post creation only for authenticated users.
+
+Implemented a Marshmallow PostSchema using SQLAlchemyAutoSchema for validation.
+
+Encountered multiple issues including:
+
+JWT token expiration.
+
+Route not being recognized due to incorrect URL paths.
+
+500 Internal Server Errors during post creation.
+
+Schema validation errors (user_id being an unknown or missing field).
+
+Logging errors due to undefined app or logger objects.
+
+Added db.session.rollback() and began setting up logging for clearer debugging.
+
+🌱 What You’re Learning
+JWT authentication flow — how to get and use a token properly in a protected route.
+
+Schema validation in Marshmallow — understanding how to separate fields used for deserialization vs. those set manually (like user_id from get_jwt_identity()).
+
+Flask route registration — importance of url_prefix, Blueprint registration, and route paths.
+
+Error handling best practices — using try/except, db.session.rollback(), and logging to diagnose and prevent crashes.
+
+Logging setup in Flask — and how to avoid NameError by using current_app.logger inside route files instead of app.logger.
 ---
 
 **Prompt for ChatGPT:**
 
-Next Steps Prompt for Tomorrow
-Ensure Password Hash Format Consistency:
+"Hey ChatGPT, let's continue debugging the 500 error from my Flask app when trying to create a post. We confirmed the following yesterday:
 
-Recheck the hash format in your login route. Make sure that the hash stored in the database is using the same format expected by passlib.scrypt (e.g., scrypt:32768:8:1$...).
+The Post model and schema are up to date.
 
-Verify that the hash generated during registration is correctly stored and used during login.
+PostgreSQL is running and the schema matches.
 
-Verify the Login Flow:
+JWT authentication works and returns a valid user_id.
 
-Test the login functionality thoroughly:
+We've wrapped the DB commit in a try-except block with rollback and logging.
 
-Make sure you're sending the correct username and password in your request.
+Flask logging is set up, but I hit a NameError because app or logger wasn't defined in routes.py.
 
-Log the hash value on the server to ensure that the correct hash is being used to compare against the password.
+Let’s start by fixing the logging setup properly in routes.py, verify again whether the user exists before inserting the post, and ensure that the user_id is not being included in the marshmallow PostSchema load, but is manually injected."
 
-Improve Error Handling and Logging:
+07/31/2025
 
-Add more detailed logging and error handling in your login and registration routes. For instance, print the user’s hashed password and the hashed password in the database for debugging purposes.
+✅ KasiLink Flask Backend – Progress Summary (Today)
+🔧 Project Setup
+Cleaned up your project structure and removed OneDrive-related file permission issues.
 
-JWT Testing:
+Created a new app/__init__.py with the proper Flask app factory setup.
 
-Once the login works, ensure you’re able to generate and retrieve the JWT correctly.
+🧱 Extensions + Config
+Set up flask_sqlalchemy, flask_migrate, and flask_jwt_extended in extensions.py.
 
-Test the protected routes to make sure the JWT is being correctly passed and validated.
+Connected everything to config.Config and initialized the extensions in your app.
 
-Database Structure Check:
+🧩 Blueprints & Routes
+Registered two blueprints:
 
-Inspect your PostgreSQL database once again to ensure the correct hash format is stored and that all the user records are properly updated.
+/auth (login/register) via auth_bp
+
+/posts (protected post routes and test route) via posts_bp
+
+🛠️ Auth System
+Built register and login endpoints with password hashing (passlib) and token-based auth using JWT.
+
+Cleaned up logic for proper error handling and credential checking.
+
+📦 Models & Schemas
+Set up database models and Marshmallow schemas (e.g., PostSchema).
+
+Installed marshmallow_sqlalchemy to serialize/deserialize post data.
+
+🧪 App is Now Running
+Successfully launched the Flask app with:
+
+arduino
+Copy
+Edit
+python run.py
+Confirmed routes like:
+
+http://127.0.0.1:5000/posts/test
+
+http://127.0.0.1:5000/auth/register
+
+🔜 Prompt to Continue Tomorrow
+“KasiLink backend is now running with auth and protected routes. Let’s continue by adding user models, enabling real posts linked to users, and managing database migrations with Flask-Migrate.”
+
+🧭 What's Next? (Tomorrow)
+Here are your top options:
+
+🔐 Add Full User Model
+
+Define User in models.py
+
+Hook it into auth_routes properly
+
+Create migration: flask db init, flask db migrate, flask db upgrade
+
+📫 Connect Posts to Users
+
+Add user-post relationship
+
+Only allow logged-in users to post under their ID
+
+🧪 Test with Postman
+
+Send JWT in headers
+
+Register & login easily with JSON payloads
+
+📄 Add Swagger UI or API Docs
+
+Use flasgger or apispec to auto-document your endpoints
+
+☁️ PostgreSQL + Deployment (Render)
+
+Swap SQLite for PostgreSQL
+
+Push to GitHub
+
+Deploy on Render for real use
+
+
+08/02/2025
+
+📝 Summary of Today’s Work:
+You:
+
+Recovered your missing __init__.py file in your Flask app.
+
+Cleaned up import errors caused by broken/missing modules.
+
+Installed packages like flask-migrate, flask-jwt-extended, and marshmallow-sqlalchemy.
+
+Created and tested user registration and login routes in Postman.
+
+Fixed JSON input issues in the login route.
+
+Updated your User model to include email.
+
+Connected to PostgreSQL and successfully ran migrations with Flask-Migrate.
+
+📝 Today’s Progress Report — Flask Authentication & DB Update
+What we accomplished:
+Implemented password hashing with werkzeug.security in the User model to securely store passwords as hashes instead of plaintext.
+
+Updated registration and login routes to use the hashed password methods (set_password and check_password).
+
+Resolved database schema mismatch by renaming the password column to password_hash via a custom Alembic migration.
+
+Applied migrations successfully, verified the database schema to reflect the changes.
+
+Tested user registration and login flows with Postman and confirmed JWT tokens are issued correctly.
+
+Established a clean foundation for future protected routes using JWT.
+
+What’s next:
+Add protected routes that require JWT authentication.
+
+Implement user profile management (update details, change password).
+
+Possibly add HTML templates or connect with a frontend framework.
+
+Prepare for deployment (e.g., to Render, Railway).
+
+08/04/2025
+
+✅ Quick Recap So Far
+You've successfully:
+
+Registered users with hashed passwords
+
+Logged in users and generated JWT tokens
+
+Created protected routes (like /auth/me, /posts/protected)
+
+Verified JWT authentication works via Postman
+
+⏭️ Next Step: User Profile Management
+Let's implement two more features:
+
+
+✅ Progress Recap
+OneDrive + Path Fixes: Fixed import and environment issues (flask not recognized, migration errors, etc.).
+
+JWT Auth Setup: Login, register, and protected route successfully tested.
+
+Schema Fixes: Switched from password to password_hash, updated Alembic migrations.
+
+User Profile: /auth/me and /auth/profile endpoints fully working.
+
+Password Change: /auth/change-password route tested and working with token auth.
+
+Database Integrity: Tables now match model structure after reset and migrations.
+
+▶️ Next Steps (Tomorrow)
+Post Creation Routes:
+
+Implement POST /posts to create posts (authenticated users only).
+
+Implement GET /posts to list all posts.
+
+Later: Add filtering by user or category.
+
+User Management:
+
+Add ability to delete account.
+
+Optional: Add email verification (via token, just backend-side for now).
+
+Frontend or Templates:
+
+Either integrate with a frontend (React, Vue, etc.) or add simple HTML templates (Jinja2).
+
+Prepare for Deployment:
+
+Clean up .env, update config.py.
+
+Setup on Render or Railway with PostgreSQL.
+
+08/05/2025
+
+✅ Issue: Import Errors and ModuleNotFoundError
+You were getting errors like:
+
+ModuleNotFoundError: No module named 'app.routes.routes.auth_routes'
+
+ModuleNotFoundError: No module named 'app.routes.posts_routes'
+
+And similar module resolution problems
+
+🧰 Cause
+Your routes/ folder is inside the app/ directory, but:
+
+You didn’t have an __init__.py file inside app/routes/, so Python didn’t treat it as a package.
+
+There were import mistakes like trying to do from app.routes.routes.auth_routes due to wrong nesting.
+
+🛠️ Fixes Applied
+Added __init__.py to the app/routes/ folder to mark it as a package.
+
+Corrected imports in app/__init__.py:
+
+python
+Copy
+Edit
+from .routes.auth_routes import auth_bp
+from .routes.posts_routes import posts_bp
+Made sure you run the app from the root (kasilink/) folder, not inside app/.
+
+🧪 Result
+Now your Flask app starts without errors, and your route blueprints (auth_bp, posts_bp) are correctly registered.
+
+Today’s Summary
+Successfully set up user registration and login with JWT authentication.
+
+Created protected routes that require JWT tokens.
+
+Implemented CRUD endpoints for posts:
+
+Create (POST /posts) with authenticated user association.
+
+Read (GET /posts/<id>) to retrieve individual posts.
+
+Began working on the Update (PUT /posts/<id>) route, facing some issues to troubleshoot.
+
+Tested protected routes and token authorization using Postman.
+
+Fixed schema and serialization issues with Marshmallow and SQLAlchemy integration.
+
+Next Steps (Tomorrow)
+Fix and finalize the PUT /posts/<id> update route.
+
+Implement the Delete (DELETE /posts/<id>) route with appropriate permissions.
+
+Add user profile management endpoints (view and update profile, change password).
+
+Optionally, implement pagination and filtering for posts.
+
+Explore connecting HTML templates or integrating a frontend framework.
+
+Prepare the app for deployment (Dockerize, deploy to Render/Railway, etc.).
+
