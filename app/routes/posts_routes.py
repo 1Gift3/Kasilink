@@ -92,13 +92,18 @@ def update_post(post_id):
     if post.user_id != user_id:
         return jsonify({"msg": "Unauthorized"}), 403
 
-    data = request.get_json()
     post_schema = PostSchema(partial=True)
 
     try:
-        updated_post = post_schema.load(data, instance=post, session=db.session)
+        data = request.get_json()
+
+        if 'title' in data:
+            post.title = data['title']
+        if 'content' in data:
+            post.content = data['content']
+
         db.session.commit()
-        return jsonify(post_schema.dump(updated_post)), 200
+        return jsonify(post_schema.dump(post)), 200
     except Exception as e:
         db.session.rollback()
         current_app.logger.error(f"Error updating post: {e}")
