@@ -1,10 +1,14 @@
 Kasilink
+
 A Flask-based backend API for managing user authentication, posting, and protected routes—powered by JWT auth and PostgreSQL.
 
 🗂 Project Structure
+
 arduino
 Copy
 Edit
+
+
 kasilink/
 ├── run.py
 ├── config.py
@@ -21,6 +25,7 @@ kasilink/
 
 
 ⚙️ Key Features
+
 Secure user registration and login using password hashing (werkzeug.security)
 
 JWT-based authentication for protected routes
@@ -33,6 +38,7 @@ User profile routes: Fetch and update account info, change password
 
 
 🚀 Setup & Run Locally
+
 Clone the repo:
 
 bash
@@ -69,7 +75,9 @@ Edit
 python run.py
 
 
+
 🧪 API Endpoints
+
 Authentication (open):
 
 POST /auth/register – Register user
@@ -99,6 +107,7 @@ Authorization: Bearer <your_access_token>
 
 
 📈 Future Enhancements
+
 Add GET /posts, GET /posts/<id>, DELETE /posts/<id>
 
 Add pagination and filtering (e.g., posts by user)
