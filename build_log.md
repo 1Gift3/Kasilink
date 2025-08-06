@@ -764,3 +764,34 @@ Explore connecting HTML templates or integrating a frontend framework.
 
 Prepare the app for deployment (Dockerize, deploy to Render/Railway, etc.).
 
+08/06/2025
+
+✅ What You’ve Just Accomplished:
+🔐 JWT login fully working
+
+🧠 Fixed the tricky "Subject must be a string" bug
+
+🔧 Built authenticated post creation
+
+✏️ Successfully updated a post with PUT (with ownership check)
+
+💪 Fully working JWT-protected CRUD system for posts
+
+🚀 What’s Next (Suggested Steps):
+Add Delete Route
+Allow users to delete their own posts (DELETE /posts/<id>).
+
+Get All Posts by User
+Add an endpoint like /posts/mine that returns only the posts of the authenticated user.
+
+Validation & Pagination (optional)
+
+Prevent empty content
+
+Add ?page=1&limit=10 to /posts for scalable listing
+
+Frontend / HTML Templates (optional)
+If you're doing HTML output (Flask templates) or building an API for React/Vue.
+
+Deployment Ready
+Set up for Render or Railway with .env, production configs, and Procfile.
