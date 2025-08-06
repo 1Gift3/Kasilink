@@ -795,3 +795,69 @@ If you're doing HTML output (Flask templates) or building an API for React/Vue.
 
 Deployment Ready
 Set up for Render or Railway with .env, production configs, and Procfile.
+
+✅ KasiLink Dev Log — CRUD Progress Summary
+🔐 Authentication & Token Fixes
+Resolved "Subject must be a string" error by converting user.id to str(user.id) in create_access_token.
+
+Confirmed access token is being returned correctly during login.
+
+Verified token works with protected routes using @jwt_required().
+
+🛠️ Post Routes (CRUD Progress)
+✔️ Create Post: User can create a post (title, content) with their token. User ID is auto-attached from JWT.
+
+✔️ Read Post(s):
+
+/posts - Get all posts (public or protected depending on design).
+
+/posts/<id> - Get specific post by ID.
+
+✔️ Update Post:
+
+Implemented secure update route using PUT /posts/<post_id>.
+
+Verified post belongs to the logged-in user before allowing updates.
+
+Resolved 403 and JWT issues, now fully functional.
+
+✅ Debugging Milestones
+Fixed:
+
+Token expiration issues
+
+Missing or invalid JWT subject
+
+403 forbidden on update
+
+Schema errors during post creation (Unknown field, requires session, etc.)
+
+🧪 Tested Successfully In Postman
+Logged in, copied access token, and used it for:
+
+Creating posts
+
+Getting individual posts
+
+Updating a post (with full authorization check)
+
+📍 You’re Now At:
+CRUD Progress: 3/4 routes done
+
+✅ Create
+
+✅ Read
+
+✅ Update
+
+⏳ Delete (next)
+
+🚀 Next Steps (Suggestions)
+🔥 Add Delete Post route with JWT ownership check.
+
+📦 List posts by logged-in user (/posts/mine).
+
+🎨 (Optional) Add HTML templates or build a frontend.
+
+🚀 Prepare for deployment to Render or Railway.
+
