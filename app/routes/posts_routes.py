@@ -86,28 +86,29 @@ def get_post(post_id):
 @posts_bp.route('/<int:post_id>', methods=['PUT'])
 @jwt_required()
 def update_post(post_id):
-    user_id = get_jwt_identity()
-    post = Post.query.get_or_404(post_id)
-
-    if post.user_id != user_id:
-        return jsonify({"msg": "Unauthorized"}), 403
-
-    post_schema = PostSchema(partial=True)
-
     try:
-        data = request.get_json()
+        user_id = int(get_jwt_identity())  # Force it to int
+        post = Post.query.get_or_404(post_id)
 
-        if 'title' in data:
-            post.title = data['title']
-        if 'content' in data:
-            post.content = data['content']
+        print(f"JWT user_id: {user_id} ({type(user_id)})")
+        print(f"Post user_id: {post.user_id} ({type(post.user_id)})")
+
+        if post.user_id != user_id:
+            print("🚫 Authorization failed")
+            return jsonify({"msg": "Unauthorized"}), 403
+
+        post_schema = PostSchema(partial=True)
+        data = request.get_json()
+        post = post_schema.load(data, instance=post, partial=True)
 
         db.session.commit()
         return jsonify(post_schema.dump(post)), 200
+
     except Exception as e:
         db.session.rollback()
         current_app.logger.error(f"Error updating post: {e}")
         return jsonify({"msg": "Error updating post"}), 500
+
 
 
 @posts_bp.route('/<int:post_id>', methods=['DELETE'])

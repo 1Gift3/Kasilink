@@ -44,27 +44,24 @@ def register():
 def login():
     try:
         data = request.get_json()
-        username = data.get('username')
-        password = data.get('password')
+        username = data.get("username")
+        password = data.get("password")
+
+        if not username or not password:
+            return jsonify({"msg": "Missing username or password"}), 400
 
         user = User.query.filter_by(username=username).first()
 
         if not user or not user.check_password(password):
             return jsonify({"msg": "Invalid credentials"}), 401
 
-
         access_token = create_access_token(identity=str(user.id))
+        print("Token identity type:", type(str(user.id)))
         return jsonify(access_token=access_token), 200
 
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
-    print("Incoming email:", data['email'])
-    print("Incoming password:", data['password'])
-    print("Stored hash:", user.password)
-
-    result = pwd_context.verify(data['password'], user.password)
-    print("Password verified:", result)
 
 @auth_bp.route('/me', methods=['GET'])
 @jwt_required()
