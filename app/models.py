@@ -1,5 +1,5 @@
 from app import db
-from .extensions import db
+from app.extensions import db
 from datetime import datetime
 from werkzeug.security import generate_password_hash, check_password_hash
 
@@ -25,7 +25,10 @@ class Post(db.Model):
     title = db.Column(db.String(255), nullable=False)
     content = db.Column(db.Text, nullable=False)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
-
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    deleted = db.Column(db.Boolean, default=False) 
+    
     user = db.relationship('User', backref=db.backref('posts' , lazy=True))
     
 

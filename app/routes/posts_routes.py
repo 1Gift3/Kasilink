@@ -71,14 +71,14 @@ def create_post():
     
 @posts_bp.route('/', methods=['GET'])
 def get_posts():
-    posts = Post.query.all()
+    posts = Post.query.filter(Post.deleted == False).all() 
     posts_schema = PostSchema(many=True)
     return jsonify(posts_schema.dump(posts)), 200
 
 
 @posts_bp.route('/<int:post_id>', methods=['GET'])
 def get_post(post_id):
-    post = Post.query.get_or_404(post_id)
+    post = Post.query.filter_by(id=post_id, deleted=False).first_or_404()
     post_schema = PostSchema()
     return jsonify(post_schema.dump(post)), 200
 
@@ -121,6 +121,7 @@ def delete_post(post_id):
         return jsonify({"msg": "Unauthorized"}), 403
 
     try:
+        post.deleted = True  # Soft delete
         db.session.delete(post)
         db.session.commit()
         return jsonify({"msg": "Post deleted"}), 200
