@@ -114,7 +114,7 @@ def update_post(post_id):
 @posts_bp.route('/<int:post_id>', methods=['DELETE'])
 @jwt_required()
 def delete_post(post_id):
-    user_id = get_jwt_identity()
+    user_id = int(get_jwt_identity())
     post = Post.query.get_or_404(post_id)
 
     if post.user_id != user_id:
@@ -124,6 +124,7 @@ def delete_post(post_id):
         db.session.delete(post)
         db.session.commit()
         return jsonify({"msg": "Post deleted"}), 200
+    
     except Exception as e:
         db.session.rollback()
         current_app.logger.error(f"Error deleting post: {e}")
