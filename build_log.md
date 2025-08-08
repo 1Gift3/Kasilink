@@ -861,3 +861,30 @@ CRUD Progress: 3/4 routes done
 
 🚀 Prepare for deployment to Render or Railway.
 
+
+
+08/08/25
+
+Today’s Progress Review:
+Successfully implemented JWT authentication with registration, login, and protected routes.
+
+Built CRUD endpoints for posts, including create, read, update, and delete.
+
+Implemented user profile management with view and update profile.
+
+Added change password endpoint with password hashing and verification.
+
+Troubleshot import/module path issues and resolved routing conflicts.
+
+Tested endpoints using Postman and Python requests (still tweaking testing in Python shell).
+
+What’s Next:
+Polish testing process: fix the testing script or interactive shell usage.
+
+Implement any missing CRUD features for posts or users.
+
+Add soft delete for posts if needed.
+
+Start integrating frontend or add HTML templates.
+
+Prepare deployment setup (e.g., on Render or Railway).
