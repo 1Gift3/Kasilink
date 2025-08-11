@@ -60,6 +60,7 @@ def create_post():
         return jsonify(post_schema.dump(post)), 201
 
     except ValidationError as ve:
+        current_app.logger.error(f"Validation errors: {ve.messages}")
         return jsonify({"errors": ve.messages}), 400
 
     except Exception as e:

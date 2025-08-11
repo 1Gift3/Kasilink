@@ -136,3 +136,5 @@ def get_profile():
         "username": user.username,
         "email": user.email
     }), 200
+
+

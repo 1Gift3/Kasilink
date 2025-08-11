@@ -1,10 +1,13 @@
 from marshmallow_sqlalchemy import SQLAlchemyAutoSchema
 from marshmallow import Schema, fields
-from .models import Post, User
+from app.models import Post, User
 from .extensions import db 
 
 
 class PostSchema(SQLAlchemyAutoSchema):
+    category = fields.String(required=False)   # add this line
+    location = fields.String(required=False)
+    
     class Meta:
         model = Post
         load_instance = True
