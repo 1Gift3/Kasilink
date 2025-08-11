@@ -888,3 +888,24 @@ Add soft delete for posts if needed.
 Start integrating frontend or add HTML templates.
 
 Prepare deployment setup (e.g., on Render or Railway).
+
+
+08/11/2025
+
+Testing Progress
+
+
+* Implemented and refined automated tests using `pytest` for key API endpoints in Kasilink.
+* Covered:
+
+  * Home route check (`GET /`) — simple health check.
+  * User registration and login endpoints (`POST /auth/register`, `POST /auth/login`) with JWT token verification.
+  * Post creation endpoint (`POST /posts/`) with authentication and data validation.
+* Debugged and fixed several issues related to:
+
+  * Configuration for test environment and in-memory SQLite database.
+  * Passing JWT tokens correctly in test requests.
+  * Adjusting Marshmallow schemas to align with test data fields.
+* Achieved all tests passing successfully, ensuring endpoint functionality and security (auth-protected routes).
+* Prepared codebase for future test expansions and continuous integration setup.
+
