@@ -951,6 +951,84 @@ Sure! Here’s a neat summary of what you did recently to include in your build 
   * Server starts without import errors.
   * Routes accessible as expected.
 
+Great! Since your app is running and your tests mostly pass, and no migrations are currently needed, here’s a good next step plan to keep your project moving forward smoothly:
+
+---
+
+### What’s next?
+
+1. **Improve test coverage:**
+
+   * Add tests for all your routes (PUT, DELETE, PATCH).
+   * Cover edge cases (invalid data, unauthorized access).
+   * Add tests for error handling.
+
+2. **Add documentation:**
+
+   * Write API docs (Swagger/OpenAPI or simple README).
+   * Document environment setup, running tests, and migration process.
+
+3. **Add features or polish existing ones:**
+
+   * Add soft delete if needed (mark posts as deleted without removing).
+   * Add pagination to your GET posts endpoint.
+   * Add search or filters for posts.
+
+4. **Set up deployment:**
+
+   * Prepare your app for deployment (config for production).
+   * Choose a host (Heroku, Render, AWS, etc.).
+   * Automate migrations and tests in CI/CD pipeline.
+
+5. **Security & Validation:**
+
+   * Add input validation (use Marshmallow schemas more thoroughly).
+   * Rate limiting, CORS setup if needed.
+   * Secure JWT tokens with expiry and refresh tokens.
+
+6. **Front-end or client integration:**
+
+   * Build or connect a front-end app.
+   * Test API with your client.
+
+
+Sure! Here’s a concise review summary for your build log today:
+
+---
+
+## Build Log Review — Testing & Setup (Day X)
+
+### What was done:
+
+* Built and tested core API routes: authentication, posts CRUD.
+* Added JWT-based auth and protected routes.
+* Implemented tests with pytest for home, registration/login, post creation.
+* Created test fixtures with in-memory SQLite to isolate test DB.
+* Updated app factory (`create_app()`) to accept configs for flexibility.
+* Encountered and addressed common issues: missing test DB config, import errors, schema validation.
+
+### Current blockers:
+
+* All tests fail due to `RuntimeError: Either 'SQLALCHEMY_DATABASE_URI' or 'SQLALCHEMY_BINDS' must be set.`
+  → This means the app config used during tests is missing the required DB connection string.
+* Imports and app structure caused `ModuleNotFoundError` — resolved by fixing folder structure and imports.
+* Marshmallow schema validation errors surfaced on some test data (fixed in last tests).
+
+### Next steps:
+
+* Ensure your test config properly sets `SQLALCHEMY_DATABASE_URI` before app initialization (e.g., via `TestingConfig` or test fixture override).
+* Confirm `conftest.py` passes correct config to `create_app()`.
+* Revisit your `create_app()` logic to respect config input correctly.
+* Run simple test (e.g., home route) after config fix to confirm setup.
+* Then add more comprehensive tests (register/login, posts CRUD).
+* Consider automating DB setup/teardown during tests with proper migrations or table creation.
+* Maintain isolated test environment so tests don’t affect dev DB.
+
+### Tips:
+
+* Test errors usually point to config or missing DB URI — fix config first.
+* Use print/debug logs inside `create_app()` and test fixtures to verify config values.
+* Incrementally build tests and app features to isolate failures.
 
 
 
