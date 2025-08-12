@@ -909,3 +909,48 @@ Testing Progress
 * Achieved all tests passing successfully, ensuring endpoint functionality and security (auth-protected routes).
 * Prepared codebase for future test expansions and continuous integration setup.
 
+
+08/12/2025
+
+Sure! Here’s a neat summary of what you did recently to include in your build log before committing:
+
+---
+
+### Kasilink Build Log - Progress Summary
+
+* **Configured app factory (`create_app`)**:
+
+  * Set up Flask app initialization in `app/__init__.py`.
+  * Loaded configuration with environment-specific support (`test_config` override).
+  * Initialized extensions: SQLAlchemy (`db`), Flask-Migrate (`migrate`), Flask-JWT (`jwt`).
+  * Registered Blueprints for modular routes:
+
+    * `posts_bp` with prefix `/posts`
+    * `auth_bp` with prefix `/auth`
+    * `main_bp` without prefix
+
+* **Resolved import issues**:
+
+  * Fixed `ModuleNotFoundError` for app routes by correcting import paths.
+  * Ensured all route files (`auth_routes.py`, `posts_routes.py`, etc.) live under `app/routes`.
+
+* **Test setup improvements**:
+
+  * Created `conftest.py` and test configuration for isolated, in-memory testing with SQLite.
+  * Added fixtures for test client and app context.
+  * Verified user registration, login, and post creation tests running successfully.
+
+* **Environment config adjustments**:
+
+  * Cleaned up `config.py` to handle secrets properly.
+  * Added separate config classes for default and testing.
+  * Made `create_app` accept optional config for easier testing.
+
+* **Verified run with `python run.py`**:
+
+  * Server starts without import errors.
+  * Routes accessible as expected.
+
+
+
+
