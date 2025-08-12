@@ -3,10 +3,9 @@ from flask_migrate import Migrate
 from .extensions import db, jwt
 from .routes.auth_routes import auth_bp
 from .routes.posts_routes import posts_bp
-from .routes.main_routes import main_bp
-from config import Config  # Import your config
+from app.routes import auth_bp, posts_bp, main_bp
 
-migrate = Migrate()  # Ensure migrate is defined here
+migrate = Migrate()
 
 def create_app(config_class=None):
     app = Flask(__name__)
