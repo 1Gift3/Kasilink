@@ -1031,4 +1031,66 @@ Sure! Here’s a concise review summary for your build log today:
 * Incrementally build tests and app features to isolate failures.
 
 
+08/13/2025
+
+
+Here’s a concise summary of your **KasiLink API build log so far**:
+
+---
+
+### **1. Project Setup**
+
+* Created `app/` and `tests/` directories.
+* `app/` contains:
+
+  * `__init__.py` → `create_app()` with Flask app factory, blueprint registration, JWT, and SQLAlchemy setup.
+  * `extensions.py` → initialized `db`, `migrate`, `jwt`.
+  * `models.py` → database models for users and posts.
+  * `schemas.py` → Marshmallow schemas for serialization/validation.
+  * `routes/` → blueprints for `auth_routes`, `posts_routes`, and `main_routes`.
+  * `config.py` → `DevelopmentConfig`, `TestingConfig` with database URIs and secret keys.
+* `run.py` → runs the app using `create_app()`.
+
+---
+
+### **2. Testing Setup**
+
+* Added `conftest.py`:
+
+  * Fixtures for `app`, `client`, and `auth_token`.
+  * Configured in-memory SQLite for testing.
+* Used pytest to validate endpoints: `/`, `/auth/register`, `/auth/login`, `/posts/`.
+
+---
+
+### **3. Test Execution & Fixes**
+
+* Initial tests failed due to:
+
+  * Import errors (blueprints not found) → fixed by updating import paths according to folder structure.
+  * Configuration issues → resolved by passing `TestingConfig` and ensuring `SQLALCHEMY_DATABASE_URI` was set.
+  * Legacy SQLAlchemy warnings → replaced `Query.get()` with `db.session.get()`.
+  * JWT handling and invalid credentials responses fixed in auth routes.
+
+* After fixes, **all 11 core tests passed**:
+
+  * Home endpoint
+  * Auth register/login
+  * CRUD operations for posts
+  * Edge cases like non-existent posts for update/delete
+
+---
+
+### **4. Next Steps**
+
+* Add **more edge case tests** to cover:
+
+  * Invalid or missing post fields
+  * Unauthorized post updates/deletes
+  * Login with wrong usernames or passwords
+  * Duplicate registration attempts
+* These tests will **harden the API** and ensure robustness.
+
+---
+
 
