@@ -1,4 +1,4 @@
-from flask import Flask
+from flask import Flask, app
 from flask_migrate import Migrate
 from .extensions import db, jwt
 from .routes.auth_routes import auth_bp
@@ -15,6 +15,9 @@ def create_app(config_class=None):
         app.config.from_object(DevelopmentConfig)
     else:
         app.config.from_object(config_class)
+        print("🔍 Running with config:", config_class.__name__)
+        print("🔍 SQLALCHEMY_DATABASE_URI =", app.config.get("SQLALCHEMY_DATABASE_URI"))
+
     
     db.init_app(app)
     migrate.init_app(app, db)
