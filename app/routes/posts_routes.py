@@ -89,7 +89,9 @@ def get_post(post_id):
 def update_post(post_id):
     try:
         user_id = int(get_jwt_identity())  # Force it to int
-        post = Post.query.get_or_404(post_id)
+        post = db.session.get(Post, post_id)
+        if not post:
+            return jsonify({"error": "Post not found"}), 404
 
         print(f"JWT user_id: {user_id} ({type(user_id)})")
         print(f"Post user_id: {post.user_id} ({type(post.user_id)})")
@@ -116,10 +118,9 @@ def update_post(post_id):
 @jwt_required()
 def delete_post(post_id):
     user_id = int(get_jwt_identity())
-    post = Post.query.get_or_404(post_id)
-
-    if post.user_id != user_id:
-        return jsonify({"msg": "Unauthorized"}), 403
+    post = db.session.get(Post, post_id)
+    if not post:
+        return jsonify({"error": "Post not found"}), 404
 
     try:
         post.deleted = True  # Soft delete

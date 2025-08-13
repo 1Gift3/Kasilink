@@ -33,7 +33,7 @@ def register():
         db.session.add(user)
         db.session.commit()
 
-        return jsonify({"msg": "User registered successfully"}), 201
+        return jsonify({"error": "User registered successfully"}), 201
 
     except Exception as e:
         return jsonify({"error": str(e)}), 500
@@ -48,12 +48,12 @@ def login():
         password = data.get("password")
 
         if not username or not password:
-            return jsonify({"msg": "Missing username or password"}), 400
+            return jsonify({"error": "Missing username or password"}), 400
 
         user = User.query.filter_by(username=username).first()
 
         if not user or not user.check_password(password):
-            return jsonify({"msg": "Invalid credentials"}), 401
+            return jsonify({"error": "Invalid credentials"}), 401
 
         access_token = create_access_token(identity=str(user.id))
         print("Token identity type:", type(str(user.id)))
@@ -81,7 +81,7 @@ def update_profile():
 
     user = User.query.get(user_id)
     if not user:
-        return jsonify({"msg": "User not found"}), 404
+        return jsonify({"error": "User not found"}), 404
 
     data = request.get_json()
     username = data.get('username')
@@ -94,7 +94,7 @@ def update_profile():
         
     try:
         db.session.commit()
-        return jsonify({"msg": "Profile updated successfully"}), 200
+        return jsonify({"error": "Profile updated successfully"}), 200
     except Exception as e:
         db.session.rollback()
         return jsonify({"error": str(e)}), 500    
@@ -119,7 +119,7 @@ def change_password():
     user.set_password(new_password)
     try: 
         db.session.commit()
-        return jsonify({'msg': 'Password changed successfully'}), 200
+        return jsonify({'error': 'Password changed successfully'}), 200
 
     except Exception as e:
         db.session.rollback()
