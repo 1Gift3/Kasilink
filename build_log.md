@@ -1093,4 +1093,71 @@ Here’s a concise summary of your **KasiLink API build log so far**:
 
 ---
 
+08/14/2025
+
+Here’s a clean summary of your build and testing session so far:
+
+---
+
+### **KasiLink Build & Test Log Summary**
+
+**Environment:**
+
+* Platform: Windows (`win32`)
+* Python: 3.11.9
+* Pytest: 8.4.1
+* Database: SQLite (`sqlite:///:memory:` for tests)
+* Flask extensions: SQLAlchemy, Flask-Migrate, Flask-JWT-Extended
+
+**Recent Updates:**
+
+1. Fixed `ModuleNotFoundError` for `app.extension` → corrected to `app.extensions`.
+2. Replaced legacy `Query.get()` calls with `db.session.get()` to align with SQLAlchemy 2.0.
+3. Updated login route to return proper JSON for invalid credentials.
+4. Fixed JWT handling in protected routes (`get_jwt_identity()`).
+5. Corrected `User` model constructor to include `email` along with `username` and `password`.
+
+**Tests Executed:**
+
+* **Basic CRUD routes for posts** (`test_routes.py`)
+* **Edge cases** (`test_edge_cases.py`):
+
+  * Invalid JWTs
+  * Expired tokens
+  * Unauthenticated requests
+  * Malformed post requests
+  * User registration/login edge cases
+
+**Results (After fixes):**
+
+* Total tests: 11 (previously 5–12)
+* Passed: 3–5 (previous runs had 0)
+* Failures & Errors mostly related to:
+
+  * `User` constructor missing `email` argument
+  * JWT/authorization handling returning 404 instead of 401
+  * Malformed or incomplete post requests
+* Legacy warnings removed after switching to `db.session.get()`
+
+**Next Steps for Tomorrow:**
+
+1. Finalize **conftest.py** fixture setup to create test users correctly with `email`, `username`, `password`.
+2. Update all edge case tests to match corrected `User` constructor.
+3. Confirm all JWT-protected routes return proper 401 for unauthorized/invalid access.
+4. Add additional edge tests for:
+
+   * Expired JWT tokens
+   * Missing or malformed JSON in requests
+   * Attempting to update/delete posts that don’t exist
+5. Rerun full test suite to achieve clean pass.
+
+**Current Status:**
+
+* Core functionality implemented, most route tests passing.
+* Remaining failures mostly due to test data mismatch with `User` model constructor and JWT authorization handling.
+* After fixing these, tests should pass cleanly.
+
+---
+---
+
 
