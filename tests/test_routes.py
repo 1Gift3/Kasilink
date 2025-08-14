@@ -46,81 +46,73 @@ def auth_token(client):
 # -----------------------------
 
 def test_home(client):
-    res = client.get('/')
+    res = client.get("/")
     assert res.status_code == 200
     assert b"KasiLink API is running" in res.data
 
 def test_register_and_login(client):
-    # Register a new user to avoid conflicts
-    res = client.post('/auth/register', json={
+    # Register new user
+    res = client.post("/auth/register", json={
         "username": "newuser",
         "email": "newuser@example.com",
         "password": "newpass"
     })
     assert res.status_code == 201
 
-    # Login
-    login_res = client.post('/auth/login', json={
+    # Login new user
+    res = client.post("/auth/login", json={
         "username": "newuser",
         "password": "newpass"
     })
-    assert login_res.status_code == 200
-    data = login_res.get_json()
+    data = res.get_json()
+    assert res.status_code == 200
     assert "access_token" in data
 
 def test_create_post(client, auth_token):
-    post_data = {
-        "title": "Test Job",
-        "content": "Need help with groceries",
+    res = client.post("/posts/", json={
+        "title": "Test Post",
+        "content": "Testing posts",
         "category": "job",
-        "location": "Zone 6"
-    }
-    res = client.post('/posts/', json=post_data,
-                      headers={"Authorization": f"Bearer {auth_token}"})
-    assert res.status_code == 201
+        "location": "Zone 1"
+    }, headers={"Authorization": f"Bearer {auth_token}"})
+    
     data = res.get_json()
-    assert data["title"] == "Test Job"
+    assert res.status_code == 201
+    assert data["title"] == "Test Post"
 
 def test_update_post(client, auth_token):
     # Create post first
-    post_data = {
-        "title": "Original Title",
-        "content": "Original content",
+    create_res = client.post("/posts/", json={
+        "title": "Update Test",
+        "content": "Before update",
         "category": "job",
-        "location": "Zone 6"
-    }
-    create_res = client.post('/posts/', json=post_data,
-                             headers={"Authorization": f"Bearer {auth_token}"})
-    assert create_res.status_code == 201
+        "location": "Zone 2"
+    }, headers={"Authorization": f"Bearer {auth_token}"})
     post_id = create_res.get_json()["id"]
 
-    # Update the post
-    update_data = {
+    # Update
+    update_res = client.put(f"/posts/{post_id}", json={
         "title": "Updated Title",
-        "content": "Updated content"
-    }
-    update_res = client.put(f'/posts/{post_id}', json=update_data,
-                            headers={"Authorization": f"Bearer {auth_token}"})
+        "content": "After update"
+    }, headers={"Authorization": f"Bearer {auth_token}"})
+
+    data = update_res.get_json()
     assert update_res.status_code == 200
-    updated_post = update_res.get_json()
-    assert updated_post["title"] == "Updated Title"
-    assert updated_post["content"] == "Updated content"
+    assert data["title"] == "Updated Title"
+    assert data["content"] == "After update"
 
 def test_delete_post(client, auth_token):
-    # Create post first
-    post_data = {
-        "title": "To be deleted",
-        "content": "Delete me please",
+    create_res = client.post("/posts/", json={
+        "title": "Delete Test",
+        "content": "Will delete",
         "category": "job",
-        "location": "Zone 6"
-    }
-    res = client.post('/posts/', json=post_data,
-                      headers={"Authorization": f"Bearer {auth_token}"})
-    assert res.status_code == 201
-    post_id = res.get_json()["id"]
+        "location": "Zone 3"
+    }, headers={"Authorization": f"Bearer {auth_token}"})
+    post_id = create_res.get_json()["id"]
 
-    # Delete the post
-    del_res = client.delete(f'/posts/{post_id}',
+    # Delete
+    del_res = client.delete(f"/posts/{post_id}",
                             headers={"Authorization": f"Bearer {auth_token}"})
+    data = del_res.get_json()
     assert del_res.status_code == 200
-    assert del_res.get_json()["msg"] == "Post deleted"
+    assert data["msg"] == "Post deleted"
