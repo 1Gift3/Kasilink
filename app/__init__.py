@@ -1,9 +1,11 @@
-from flask import Flask, app
+from flask import Flask, app, jsonify
 from flask_migrate import Migrate
 from .extensions import db, jwt
 from .routes.auth_routes import auth_bp
 from .routes.posts_routes import posts_bp
 from app.routes import auth_bp, posts_bp, main_bp
+from flask_jwt_extended import JWTManager
+
 
 migrate = Migrate()
 
@@ -22,6 +24,19 @@ def create_app(config_class=None):
     db.init_app(app)
     migrate.init_app(app, db)
     jwt.init_app(app)
+     
+    @jwt.invalid_token_loader
+    def invalid_token_callback(reason):
+        return jsonify({"msg": "Invalid token"}), 401
+
+    @jwt.unauthorized_loader
+    def missing_token_callback(reason):
+        return jsonify({"msg": "Missing token"}), 401
+
+    @jwt.expired_token_loader
+    def expired_token_callback(jwt_header, jwt_payload):
+        return jsonify({"msg": "Token expired"}), 401
+  
 
     app.register_blueprint(posts_bp, url_prefix='/posts')
     app.register_blueprint(auth_bp, url_prefix='/auth')
