@@ -1,38 +1,40 @@
 import pytest
-from app import create_app
-from app.extensions import db
-from config import TestingConfig
+from app import create_app, db
+from app.models import User
 
-@pytest.fixture(scope='module')
+pytest.fixture(scope='module')
 def app():
-    app = create_app(TestingConfig)
+    """Create and configure a new app instance for each test module."""
+    app = create_app()
+    app.config['TESTING'] = True
+    app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///:memory:'
+    
     with app.app_context():
         db.create_all()
         yield app
         db.drop_all()
 
-@pytest.fixture(scope='module')
+@pytest.fixture(scope='session')
 def client(app):
     return app.test_client()
 
-@pytest.fixture(scope='module')
-def auth_token(client):
-    # Register user with email
-    client.post("/auth/register", json={
-        "username": "testuser",
-        "email": "testuser@example.com",
-        "password": "testpass"
-    })
+@pytest.fixture(scope='session')
+def test_user(app):
+    with app.app_context():
+        user = User(
+            username='testuser',
+            email='test@example.com',
+            password='testpass'
+        )
+        db.session.add(user)
+        db.session.commit()
+        return user
 
-    # Login
-    login_resp = client.post("/auth/login", json={
-        "username": "testuser",
-        "password": "testpass"
+@pytest.fixture
+def auth_token(client, test_user):
+    response = client.post('/auth/login', json={
+        'username': 'testuser',
+        'password': 'testpass'
     })
-    data = login_resp.get_json()
-    return data["access_token"]
+    return response.json['access_token']
 
-@pytest.fixture(autouse=True)
-def clean_db():
-    yield
-    db.session.rollback()
