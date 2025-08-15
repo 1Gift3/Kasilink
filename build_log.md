@@ -1159,5 +1159,82 @@ Here’s a clean summary of your build and testing session so far:
 
 ---
 ---
+Here’s your build log for today so you can pick up tomorrow without losing track:
+
+---
+
+## **KasiLink Build Log — 2025-08-15**
+
+### **Main Focus Today**
+
+* Ran tests and debugged import/module path issues.
+* Fixed `ModuleNotFoundError: No module named 'app.extension'` by restructuring imports and `__init__.py`.
+* Adjusted `conftest.py` to properly initialize the Flask app for testing.
+* Began addressing failing test cases due to model requirements (`email` field missing).
+
+---
+
+### **Key Issues Resolved**
+
+1. **Module Import Errors**
+
+   * Added proper relative imports in `app/routes/__init__.py` and ensured `__init__.py` files exist in key directories.
+
+2. **Test Client Setup**
+
+   * Rewrote `conftest.py` to correctly create and configure the test app.
+   * Ensured `client.post(...)` works without affecting request data flow.
+
+---
+
+### **Outstanding Issues**
+
+1. **`email` field required in `User` model**
+
+   * Many tests are failing because `User.__init__()` requires `email` but some test cases don’t provide it.
+
+2. **`password is not a readable attribute`**
+
+   * Caused by `@property` design in `User` model — password can only be set, not read.
+   * Tests are trying to access `user.password` directly, which raises an error.
+
+---
+
+### **Next Steps for Tomorrow**
+
+1. **Fix email issue**
+
+   * Either update tests to always provide an email, or make email optional in `User` model (not recommended unless you want it optional in production).
+
+2. **Fix password readability issue**
+
+   * Option 1: Change tests to verify `password_hash` or use `check_password()`.
+   * Option 2: Temporarily allow password reading in the `User` model for testing (less secure, not ideal for production).
+
+3. **Rerun migrations**
+
+   * Ensure DB schema matches the current `User` model.
+
+4. **Re-run all tests**
+
+   * Confirm all pass before moving to new features.
+
+---
+
+### **Test Status at End of Day**
+
+```
+2 failed
+5 passed
+5 errors
+Total tests: 12
+```
+
+* Failures: Related to `password` attribute.
+* Errors: Mostly due to missing `email` in user creation.
+
+---
+
+
 
 
