@@ -1,32 +1,37 @@
+from datetime import datetime
 from app import db
 from app.extensions import db
 from datetime import datetime
 from werkzeug.security import generate_password_hash, check_password_hash
-
+from sqlalchemy import Integer, String, Text, ForeignKey, Boolean, DateTime
 
 
 class User(db.Model):
+    __tablename__ = 'users'
+    
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(80), unique=True, nullable=False)
-    email = db.Column(db.String(100), nullable=False, unique=True)
-    password_hash = db.Column(db.String(256), nullable=False)  # store hashed passwords!
+    email = db.Column(db.String(120), unique=True, nullable=False)
+    _password = db.Column('password', String(128))  # Note the underscore
+    
+    @property
+    def password(self):
+        return self._password  # Allows read access for testing
+    
+    @password.setter
+    def password(self, password):
+        self._password = generate_password_hash(password)
+    
+    def verify_password(self, password):
+        return check_password_hash(self._password, password)
 
-    def __init__(self, username, email, password):
-        self.username = username
-        self.email = email
-        self.set_password(password)
 
-    def set_password(self, password):
-        self.password_hash = generate_password_hash(password)
-
-    def check_password(self, password):
-        return check_password_hash(self.password_hash, password)
 
 class Post(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     title = db.Column(db.String(255), nullable=False)
     content = db.Column(db.Text, nullable=False)
-    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
     category = db.Column(db.String(50))  
     location = db.Column(db.String(100))
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
