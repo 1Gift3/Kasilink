@@ -1,11 +1,11 @@
 from flask import Blueprint, request, jsonify
-from flask_jwt_extended import jwt_required, get_jwt_identity
+from flask_jwt_extended import create_access_token, jwt_required, get_jwt_identity
 from app.models import Post
 from app.extensions import db
 
 posts_bp = Blueprint("posts", __name__, url_prefix="/posts")
 
-@posts_bp.route("/", methods=['POST'], strict_slashes=False)
+@posts_bp.route("/posts", methods=['POST'], strict_slashes=False)
 @jwt_required()
 def create_post():
     data = request.get_json()
@@ -28,7 +28,7 @@ def get_posts():
     return jsonify([{"id": p.id, "title": p.title, "content": p.content} for p in posts]), 200
 
 
-@posts_bp.route("/<int:post_id>", methods=['PUT'], strict_slashes=False)
+@posts_bp.route("/posts/<int:post_id>", methods=['PUT'], strict_slashes=False)
 @jwt_required()
 def update_post(post_id):
     post = db.session.get(Post, post_id)
@@ -43,7 +43,7 @@ def update_post(post_id):
     return jsonify({"message": "Post updated successfully"}), 200
 
 
-@posts_bp.route("/<int:post_id>", methods=['DELETE'], strict_slashes=False)
+@posts_bp.route("/posts/<int:post_id>", methods=['DELETE'], strict_slashes=False)
 @jwt_required()
 def delete_post(post_id):
     post = db.session.get(Post, post_id)
