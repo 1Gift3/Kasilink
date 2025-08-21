@@ -3,9 +3,9 @@ from flask_jwt_extended import jwt_required, get_jwt_identity
 from app.models import Post
 from app.extensions import db
 
-posts_bp = Blueprint('posts', __name__)
+posts_bp = Blueprint("posts", __name__, url_prefix="/posts")
 
-@posts_bp.route('/posts', methods=['POST'], strict_slashes=False)
+@posts_bp.route("/", methods=['POST'], strict_slashes=False)
 @jwt_required()
 def create_post():
     data = request.get_json()
@@ -14,7 +14,7 @@ def create_post():
     if not isinstance(data['title'], str) or not isinstance(data['content'], str):
         return jsonify({"error": "Invalid data type"}), 400
 
-    user_id = get_jwt_identity()
+    user_id = int(get_jwt_identity())
     new_post = Post(title=data['title'], content=data['content'], user_id=user_id)
     db.session.add(new_post)
     db.session.commit()
@@ -22,13 +22,13 @@ def create_post():
     return jsonify({"message": "Post created successfully", "id": new_post.id}), 201
 
 
-@posts_bp.route('/posts', methods=['GET'], strict_slashes=False)
+@posts_bp.route("/", methods=['GET'], strict_slashes=False)
 def get_posts():
     posts = Post.query.all()
     return jsonify([{"id": p.id, "title": p.title, "content": p.content} for p in posts]), 200
 
 
-@posts_bp.route('/posts/<int:post_id>', methods=['PUT'], strict_slashes=False)
+@posts_bp.route("/<int:post_id>", methods=['PUT'], strict_slashes=False)
 @jwt_required()
 def update_post(post_id):
     post = db.session.get(Post, post_id)
@@ -43,7 +43,7 @@ def update_post(post_id):
     return jsonify({"message": "Post updated successfully"}), 200
 
 
-@posts_bp.route('/posts/<int:post_id>', methods=['DELETE'], strict_slashes=False)
+@posts_bp.route("/<int:post_id>", methods=['DELETE'], strict_slashes=False)
 @jwt_required()
 def delete_post(post_id):
     post = db.session.get(Post, post_id)
