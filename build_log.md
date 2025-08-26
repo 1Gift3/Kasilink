@@ -1237,4 +1237,130 @@ Total tests: 12
 
 
 
+08/26/25
+
+Here’s a detailed build log summarizing today’s work on your Flask/SQLAlchemy/JWT project:
+
+---
+
+## **Build Log – 26 Aug 2025**
+
+### **Project Focus**
+
+* Fix and stabilize authentication and posts API endpoints.
+* Address failing edge tests and route tests.
+* Integrate JWT authentication correctly for all protected routes.
+* Resolve model issues and fixture problems for proper testing.
+
+---
+
+### **1. Issues Identified**
+
+1. **JWT Authentication Failures**
+
+   * `test_create_post`, `test_update_post`, `test_delete_post` returning `401`.
+   * Token either not generated correctly or not sent in request headers.
+
+2. **User Model & Password Handling**
+
+   * Previous `password` attribute led to `AttributeError`.
+   * Conflicts between `password`, `password_hash`, and setter/getter methods.
+   * Fixtures using `password` caused IntegrityError and missing argument errors.
+
+3. **Email & Unique Constraint Issues**
+
+   * `User` table required unique email; tests failed due to duplicate or missing emails.
+   * Fixtures and tests needed proper email handling for each user creation.
+
+4. **Fixture Scope Mismatches**
+
+   * Using module-scoped `app` and session-scoped `client` caused `ScopeMismatch` errors.
+   * `auth_token` fixture was inconsistent in scope and usage across test files.
+
+5. **Route Confusions**
+
+   * Blueprint URLs and `strict_slashes` caused unexpected 404/401 responses.
+   * `/posts/posts` appeared multiple times in URL map due to inconsistent route definitions.
+
+---
+
+### **2. Steps Taken**
+
+1. **User Model Refactoring**
+
+   * Added `_password` column with property setter/getter.
+   * Created `verify_password()` method for authentication checks.
+
+2. **JWT Login Route Fix**
+
+   * Ensured `/auth/login` returns proper `access_token`.
+   * Correctly verifies hashed password.
+
+3. **Test Fixtures**
+
+   * Added `auth_headers` fixture returning `{"Authorization": f"Bearer {token}"}`.
+   * Fixed scope issues to match test usage (session/module alignment).
+   * Updated `test_user` fixture to include unique username/email and hashed password.
+
+4. **Post Routes**
+
+   * Verified `@jwt_required()` applied to POST/PUT/DELETE endpoints.
+   * Added proper `strict_slashes=False` and consistent URL paths.
+   * Refactored create/update/delete logic to return post `id` for testing.
+
+5. **Test Functions**
+
+   * Updated `test_create_post`, `test_update_post`, `test_delete_post` to use `auth_headers`.
+   * Fixed JSON parsing and status code assertions.
+   * Added print/debug statements to confirm token passing and request success.
+
+---
+
+### **3. Current Test Status**
+
+* **Passed:**
+
+  * Home route (`/`)
+  * `test_register_and_login` (register + login works, access token returned)
+
+* **Failed/Errors:**
+
+  * Protected routes (`test_create_post`, `test_update_post`, `test_delete_post`) still failing with `401`/`404` in some environments.
+  * Edge tests for invalid JWT, expired token, and missing fields not run/stable yet.
+  * Some route fixture misalignment may still exist.
+
+---
+
+### **4. Next Steps (Tomorrow)**
+
+1. **Finalize JWT Auth Testing**
+
+   * Ensure `auth_headers` correctly supplies token to all protected routes.
+   * Confirm `client.post/put/delete` includes proper headers.
+
+2. **Edge Case Tests**
+
+   * Invalid JWT, expired tokens, malformed request bodies.
+   * Missing or duplicate user registration cases.
+
+3. **Database Cleanup**
+
+   * Confirm tests run on `sqlite:///:memory:` and rollback/cleanup correctly.
+   * Ensure unique email/username for each test user to avoid `IntegrityError`.
+
+4. **Route Verification**
+
+   * Print and confirm `app.url_map` to ensure endpoints match test requests.
+   * Remove duplicate `/posts/posts` route issues.
+
+---
+
+### **Summary**
+
+* Today focused on stabilizing authentication and post creation/update/delete routes.
+* Main blockers: JWT header passing, fixture scope, and unique user constraints.
+* Next session: fix 401 errors, complete edge tests, and ensure test coverage passes fully.
+
+---
+
 
