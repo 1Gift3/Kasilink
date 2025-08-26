@@ -30,7 +30,7 @@ def test_access_without_token(client):
     assert res.status_code == 401  # Changed from 404
 
 def test_create_post_unauthenticated(client):
-    res = client.post("/posts/", json={
+    res = client.post("/posts/posts", json={
         "title": "Fail Post",
         "content": "No token"
     })
@@ -38,7 +38,7 @@ def test_create_post_unauthenticated(client):
 
 def test_create_post(client, auth_token):
     response = client.post(
-        '/posts/',
+        '/posts/posts',
         json={
             'title': 'Test Post',
             'content': 'Test content',
@@ -49,8 +49,10 @@ def test_create_post(client, auth_token):
     )
     assert response.status_code == 201
 
+    
+
 def test_create_post_invalid_data_type(client, auth_token):
-    res = client.post("/posts/", json={
+    res = client.post("/posts/posts", json={
         "title": 123,  # should be string
         "content": True
     }, headers={"Authorization": f"Bearer {auth_token}"})

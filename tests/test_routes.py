@@ -68,38 +68,41 @@ def test_register_and_login(client):
     assert res.status_code == 200
     assert "access_token" in data
 
-def test_create_post(client, auth_token):
-    res = client.post("/posts/", json={
+def test_create_post(client, auth_headers):
+    res = client.post("/posts/posts", json={
         "title": "Test Post",
-        "content": "Test content",
-        "category": "job",
-        "location": "Zone 1"
-    }, headers={"Authorization": f"Bearer {auth_token}"})
+        "content": "Test content"
+    }, headers=auth_headers)
+    
     assert res.status_code == 201
 
-def test_update_post(client, auth_token):
-    # First create post
-    create_res = client.post("/posts/", json={
+
+def test_update_post(client, auth_headers):
+    # Create first
+    create_res = client.post("/posts/posts", json={
         "title": "Update Test",
         "content": "Before update"
-    }, headers={"Authorization": f"Bearer {auth_token}"})
-    post_id = create_res.json['id']
+    }, headers=auth_headers)
     
-    # Then update it
+    post_id = create_res.get_json()["id"]
+
+    # Then update
     update_res = client.put(f"/posts/{post_id}", json={
         "title": "Updated Title"
-    }, headers={"Authorization": f"Bearer {auth_token}"})
+    }, headers=auth_headers)
+
     assert update_res.status_code == 200
 
-def test_delete_post(client, auth_token):
-    # First create post
-    create_res = client.post("/posts/", json={
+
+def test_delete_post(client, auth_headers):
+    # Create first
+    create_res = client.post("/posts/posts", json={
         "title": "Delete Test",
         "content": "Test content"
-    }, headers={"Authorization": f"Bearer {auth_token}"})
-    post_id = create_res.json['id']
+    }, headers=auth_headers)
     
-    # Then delete it
-    del_res = client.delete(f"/posts/{post_id}",
-                          headers={"Authorization": f"Bearer {auth_token}"})
+    post_id = create_res.get_json()["id"]
+
+    # Then delete
+    del_res = client.delete(f"/posts/{post_id}", headers=auth_headers)
     assert del_res.status_code == 200
