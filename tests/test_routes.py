@@ -1,3 +1,4 @@
+from wsgiref import headers
 import pytest
 from app import create_app
 from app.extensions import db
@@ -50,6 +51,21 @@ def test_home(client):
     assert res.status_code == 200
     assert b"KasiLink API is running" in res.data
 
+def get_auth_headers(client):
+    # Register
+    client.post("/auth/register", json={
+        "username": "testuser",
+        "email": "test@example.com",
+        "password": "password"
+    })
+    # Login
+    login_res = client.post("/auth/login", json={
+        "email": "test@example.com",
+        "password": "password"
+    })
+    token = login_res.get_json()["access_token"]
+    return {"Authorization": f"Bearer {token}"}  
+
 def test_register_and_login(client):
     # Register new user
     res = client.post("/auth/register", json={
@@ -68,41 +84,61 @@ def test_register_and_login(client):
     assert res.status_code == 200
     assert "access_token" in data
 
-def test_create_post(client, auth_headers):
-    res = client.post("/posts/posts", json={
+def test_create_post(client):
+    # First register or login user
+    client.post("/auth/register", json={
+        "username": "tester",
+        "email": "test@example.com",
+        "password": "password123"
+    })
+    login_response = client.post("/auth/login", json={
+        "email": "test@example.com",
+        "password": "password123"
+    })
+
+    token = login_response.get_json()["access_token"]
+
+    headers = {
+        "Authorization": f"Bearer {token}"
+    }
+
+    # Then create post
+    res = client.post("/posts/", json={
         "title": "Test Post",
         "content": "Test content"
-    }, headers=auth_headers)
-    
+    }, headers=headers)
+
     assert res.status_code == 201
 
 
-def test_update_post(client, auth_headers):
+def test_update_post(client):
+    headers = get_auth_headers(client)
     # Create first
-    create_res = client.post("/posts/posts", json={
+    create_res = client.post("/posts/", json={
         "title": "Update Test",
         "content": "Before update"
-    }, headers=auth_headers)
+    }, headers=headers)
     
     post_id = create_res.get_json()["id"]
 
     # Then update
     update_res = client.put(f"/posts/{post_id}", json={
         "title": "Updated Title"
-    }, headers=auth_headers)
+    }, headers=headers)
 
     assert update_res.status_code == 200
 
 
-def test_delete_post(client, auth_headers):
+def test_delete_post(client):
+    headers = get_auth_headers(client)
     # Create first
-    create_res = client.post("/posts/posts", json={
+    create_res = client.post("/posts/", json={
         "title": "Delete Test",
         "content": "Test content"
-    }, headers=auth_headers)
-    
+    }, headers=headers)
+
     post_id = create_res.get_json()["id"]
 
     # Then delete
-    del_res = client.delete(f"/posts/{post_id}", headers=auth_headers)
+    del_res = client.delete(f"/posts/{post_id}", headers=headers)
     assert del_res.status_code == 200
