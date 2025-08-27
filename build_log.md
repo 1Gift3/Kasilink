@@ -1364,3 +1364,123 @@ Here’s a detailed build log summarizing today’s work on your Flask/SQLAlchem
 ---
 
 
+Here’s a **build log for today’s KasiLink development session**, including key commits and changes. You can pick up from here tomorrow.
+
+---
+
+## **KasiLink Build Log – 2025-08-27**
+
+**Project:** KasiLink (Flask + SQLAlchemy + JWT + Post CRUD + Auth)
+**Developer:** Josh
+**Session:** Ongoing – 27 August 2025
+
+---
+
+### **Summary of Work Done Today**
+
+**1. Models & User Authentication**
+
+* Updated `User` model to store `_password` and implement `verify_password`.
+* Fixed `password` setter/getter for hashing.
+* Corrected `Post` model relationships to `User`.
+* Ensured `email` and `username` are unique and non-null.
+
+**Commits:**
+
+* `models.py` – updated User class for hashed password with `_password` column.
+* `models.py` – Post model relationships cleaned up.
+
+---
+
+**2. Conftest & Test Fixtures**
+
+* Created `app` fixture for module-scoped Flask app with in-memory SQLite DB.
+* Created `client` fixture for test client session.
+* Fixed `test_user` fixture to include email and hashed password.
+* Added `auth_headers` fixture to handle JWT token injection for protected routes.
+
+**Commits:**
+
+* `conftest.py` – added `auth_headers` fixture.
+* `conftest.py` – fixed `test_user` to correctly call password setter.
+
+---
+
+**3. Auth Routes**
+
+* `/auth/register` route fixed to accept `username`, `email`, `password`.
+* `/auth/login` route returns `access_token` from `create_access_token`.
+* `/auth/protected` route protected with `@jwt_required()`.
+* Verified route parameters and request JSON matches expected fields.
+
+**Commits:**
+
+* `auth_routes.py` – corrected login to return JWT and match test JSON.
+* `auth_routes.py` – added proper error handling for missing fields.
+
+---
+
+**4. Post Routes**
+
+* `/posts` route fixed for strict\_slashes and JWT protection.
+* `create_post`, `update_post`, `delete_post` functions updated to use `get_jwt_identity()`.
+* Ensured `Post` creation commits to DB and returns correct JSON with `id`.
+* Matched route URLs in tests to blueprint URLs (`/posts` without trailing slash).
+
+**Commits:**
+
+* `posts_routes.py` – fixed route URLs and strict\_slashes.
+* `posts_routes.py` – updated CRUD functions to use JWT identity for `user_id`.
+
+---
+
+**5. Tests**
+
+* Updated `test_routes.py` to use `auth_headers` instead of manually passing `access_token`.
+* Corrected test URLs to match blueprint routes.
+* Added JWT authentication in all protected route tests.
+* Observed test failures today:
+
+  * `test_register_and_login` → 401 Unauthorized
+  * `test_create_post` → 405 / 401 depending on URL
+  * `test_update_post` / `test_delete_post` → KeyError / TypeError for token handling
+
+**Commits:**
+
+* `test_routes.py` – updated tests to use `headers=auth_headers`.
+* `test_edge_cases.py` – refreshed to work with new User model password handling.
+
+---
+
+### **Known Issues / Next Steps**
+
+1. **Login returning 401** – Need to verify `username`/`email` in test matches login route.
+2. **Post create/update/delete tests failing** – Check URL slashes and headers.
+3. **JWT token handling** – Ensure `auth_headers` fixture is used consistently.
+4. **Database integrity errors** – Confirm in-memory DB resets between tests (`db.drop_all()` and `db.create_all()`).
+
+---
+
+**Next Actions (Tomorrow)**
+
+1. Fix `test_register_and_login` → ensure correct credentials and JSON keys.
+2. Align all test URLs with blueprint route definitions.
+3. Verify `auth_headers` JWT injection works for all protected routes.
+4. Run full pytest to confirm 0 errors and 0 failures.
+
+---
+
+**Build Notes**
+
+* Python virtual environment active: `(venv)`
+* Flask version: latest dev config
+* SQLAlchemy & Flask-Migrate properly initialized
+* JWT via `flask_jwt_extended` configured and initialized
+
+---
+
+This is a clean snapshot to resume from tomorrow.
+
+---
+
+If you want, I can **also write a sample Git commit history for today** with messages for each change so you can save it in Git. Do you want me to do that?
