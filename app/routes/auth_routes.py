@@ -38,10 +38,11 @@ def register():
 @auth_bp.route('/login', methods=['POST'])
 def login():
     data = request.get_json()
-    
-    user = User.query.filter_by(username=data['username']).first()
-    
-    if not user or not user.verify_password(data['password']):
+    email = data.get("email")
+    password = data.get("password")
+    user = User.query.filter_by(username=data.get('username')).first()
+
+    if not user or not user.verify_password(password):
         return jsonify({"error": "Invalid credentials"}), 401
     
     # Generate JWT token (if using Flask-JWT)
