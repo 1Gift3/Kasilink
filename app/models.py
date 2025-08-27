@@ -16,7 +16,7 @@ class User(db.Model):
     
     @property
     def password(self):
-        return self._password  # Allows read access for testing
+        raise AttributeError("Password not readable")
     
     @password.setter
     def password(self, password):
