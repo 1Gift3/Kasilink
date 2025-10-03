@@ -56,4 +56,5 @@ def test_create_post_invalid_data_type(client, auth_token):
         "title": 123,  # should be string
         "content": True
     }, headers={"Authorization": f"Bearer {auth_token}"})
-    assert res.status_code == 200
+    # API coerces title/content to strings and creates the post
+    assert res.status_code == 201
