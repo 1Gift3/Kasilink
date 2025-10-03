@@ -22,13 +22,13 @@ def register():
     if User.query.filter_by(email=data['email']).first():
         return jsonify({"error": "Email already registered"}), 400
 
-    # Create user (password setter will hash it automatically)
+    # Create user and assign password via the property setter to ensure hashing
     new_user = User(
         username=data['username'],
-        email=data['email'],
-        password=data['password']  # This uses the setter
+        email=data['email']
     )
-    
+    # assign password using the property setter
+    new_user.password = data['password']
     db.session.add(new_user)
     db.session.commit()
     

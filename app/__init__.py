@@ -3,6 +3,7 @@ from flask_migrate import Migrate
 from .extensions import db, jwt
 from .routes.auth_routes import auth_bp
 from .routes.posts_routes import posts_bp
+from .routes.services_routes import services_bp
 from app.routes import auth_bp, posts_bp, main_bp
 from flask_jwt_extended import JWTManager
 
@@ -44,6 +45,7 @@ def create_app(config_class=None):
 
     app.register_blueprint(posts_bp, url_prefix='/posts')
     app.register_blueprint(auth_bp, url_prefix='/auth')
+    app.register_blueprint(services_bp, url_prefix='/services')
     app.register_blueprint(main_bp)
 
     return app
