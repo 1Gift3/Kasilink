@@ -7,6 +7,8 @@ from .extensions import db
 class PostSchema(SQLAlchemyAutoSchema):
     category = fields.String(required=False)   # add this line
     location = fields.String(required=False)
+    latitude = fields.Float(required=False, allow_none=True)
+    longitude = fields.Float(required=False, allow_none=True)
     
     class Meta:
         model = Post

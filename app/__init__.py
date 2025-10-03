@@ -20,6 +20,10 @@ def create_app(config_class=None):
         print("🔍 Running with config:", config_class.__name__)
         print("🔍 SQLALCHEMY_DATABASE_URI =", app.config.get("SQLALCHEMY_DATABASE_URI"))
 
+    # Ensure JWT has a secret key configured (fallback to SECRET_KEY)
+    if not app.config.get('JWT_SECRET_KEY'):
+        app.config['JWT_SECRET_KEY'] = app.config.get('SECRET_KEY')
+
     
     db.init_app(app)
     migrate.init_app(app, db)

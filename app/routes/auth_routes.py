@@ -40,13 +40,20 @@ def login():
     data = request.get_json()
     email = data.get("email")
     password = data.get("password")
-    user = User.query.filter_by(username=data.get('username')).first()
+    # allow login by username or email
+    username = data.get('username')
+    user = None
+    if username:
+        user = User.query.filter_by(username=username).first()
+    elif email:
+        user = User.query.filter_by(email=email).first()
 
     if not user or not user.verify_password(password):
         return jsonify({"error": "Invalid credentials"}), 401
     
     # Generate JWT token (if using Flask-JWT)
-    access_token = create_access_token(identity=user.id)
+    # JWT subject is expected to be a string by newer pyjwt checks; store id as string
+    access_token = create_access_token(identity=str(user.id))
     return jsonify(access_token=access_token), 200
 
 
