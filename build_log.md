@@ -399,6 +399,27 @@ Recommended next improvements
 3. If you expect many posts, consider PostGIS and DB-level spatial queries.
 4. Standardize routes (remove duplicate `/posts/posts`) and tighten input validation if desired.
 
+---
+
+## October 3, 2025 — Service-first models & matching (additional)
+
+- Summary
+   - Implemented ServiceRequest and ServiceOffer models and a basic server-side matching flow.
+
+- What I changed (high level)
+   - Models: added `ServiceRequest` and `ServiceOffer` to `app/models.py` with fields for category, budget/hourly_rate, location, coords, and radius.
+   - Routes: added `app/routes/services_routes.py` with endpoints under `/services`:
+      - POST `/services/requests` — create a service request (JWT required)
+      - POST `/services/offers` — create a service offer (JWT required)
+      - GET `/services/matches/<request_id>` — returns offers in same category within the request radius
+   - Matching: `ServiceRequest.match()` filters offers by category and uses an in-memory Haversine calculation to return nearby offers sorted by distance.
+
+- Notes & next steps
+   - Add Marshmallow schemas for ServiceRequest/ServiceOffer and Alembic migrations for the new tables.
+   - For production-scale matching, replace in-memory filtering with a spatial index (PostGIS) and SQL bounding-box prefilter.
+
+*(Appended by automated build log entry on 2025-10-03)*
+
 Requirements coverage (quick checklist)
 - Add coordinates to posts — Done
 - Accept coordinates on create — Done
