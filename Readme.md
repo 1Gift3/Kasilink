@@ -1,124 +1,141 @@
-Kasilink
+# KasiLink
 
-A Flask-based backend API for managing user authentication, posting, and protected routes—powered by JWT auth and PostgreSQL.
+**KasiLink** is a community-driven platform where local individuals and businesses can **request and offer services** within their neighborhoods — all powered by location-based matching, trust, and connection.
 
-🗂 Project Structure
+---
 
-arduino
-Copy
-Edit
+## ✨ Vision & Purpose
+
+- Enable people **needing help** (tasks, services, consultations) to make requests.  
+- Enable those **offering help** (skilled individuals, small businesses) to list their services.  
+- Match requests and offers based on **category**, **location radius**, and availability.  
+- Foster trust via reviews, secure interactions, and responsible design.  
+- Grow a community where giving and receiving help is seamless and dignified.
+
+---
+
+## 🚀 Core Features
+
+- **Authentication & Profiles**  
+  Register / Login securely with hashed passwords & JWT.  
+  User profiles, ability to edit username / email / password.
+
+- **Service Requests & Offers**  
+  Create, view, edit requests (“I need help”) and offers (“I can help”) with title, description, category, location, and radius.
+
+- **Location-based Matching**  
+  Search offers that fall within the request’s radius.  
+  (Using geospatial queries: with latitude/longitude + PostGIS or similar.)
+
+- **Protected Routes & Authorization**  
+  Operations like edit/delete are only allowed by the owning user.  
+  All service endpoints require authentication.
+
+- **Extensible Future Modules**  
+  Chat / messaging between users, reviews & ratings, payment flow, frontend UI (React/Vue), and more.
+
+---
+
+## 🗂 Project Structure (Example)
+
+```
 
 kasilink/
 ├── run.py
 ├── config.py
 ├── requirements.txt
-└── app/
-    ├── __init__.py
-    ├── extensions.py
-    ├── models.py
-    ├── schemas.py
-    └── routes/
-        ├── __init__.py
-        ├── auth_routes.py
-        └── posts_routes.py
+├── app/
+│   ├── **init**.py
+│   ├── extensions.py
+│   ├── models.py
+│   ├── schemas.py
+│   └── routes/
+│       ├── auth_routes.py
+│       ├── request_routes.py
+│       ├── offer_routes.py
+│       └── match_routes.py
+├── tests/
+│   └── test_routes.py
+└── build_log.md
 
+````
 
+---
 
-⚙️ Key Features
+## 🛠 Setup & Running Locally
 
-Secure user registration and login using password hashing (werkzeug.security)
+1. Clone the repo:
+   ```bash
+   git clone https://github.com/1Gift3/Kasilink.git
+   cd Kasilink
+````
 
-JWT-based authentication for protected routes
+2. Activate virtual environment & install:
 
-CRUD-post model resources connected to authenticated users
+   ```bash
+   python -m venv venv
+   source venv/bin/activate       # or .\venv\Scripts\activate on Windows
+   pip install -r requirements.txt
+   ```
 
-PostgreSQL integration with Flask‑Migrate for migrations
+3. Configure environment / database:
 
-User profile routes: Fetch and update account info, change password
+   * Set `SQLALCHEMY_DATABASE_URI` in `config.py` (e.g. PostgreSQL)
+   * Set `JWT_SECRET_KEY`
 
+4. Run migrations:
 
-🚀 Setup & Run Locally
+   ```bash
+   flask db upgrade
+   ```
 
-Clone the repo:
+5. Start the app:
 
-bash
-Copy
-Edit
-git clone https://github.com/1Gift3/Kasilink.git
-cd Kasilink
-Create and activate your virtual environment:
+   ```bash
+   python run.py
+   ```
 
-bash
-Copy
-Edit
-python -m venv venv
-.\venv\Scripts\activate  # Windows
-Install dependencies:
+---
 
-bash
-Copy
-Edit
-pip install -r requirements.txt
-Configure PostgreSQL in config.py (set SQLALCHEMY_DATABASE_URI, JWT_SECRET_KEY).
+## 📦 API Endpoints (Draft)
 
-Run database migrations:
+| Method | Route                     | Description                                      |
+| ------ | ------------------------- | ------------------------------------------------ |
+| POST   | `/auth/register`          | Register new user                                |
+| POST   | `/auth/login`             | Login and get access token                       |
+| GET    | `/auth/profile`           | Retrieve user profile                            |
+| PUT    | `/auth/profile`           | Update username/email                            |
+| PUT    | `/auth/change-password`   | Update user password                             |
+| POST   | `/requests`               | Create a service request                         |
+| GET    | `/offers`                 | List service offers (with optional filtering)    |
+| POST   | `/offers`                 | Submit your service offer                        |
+| GET    | `/match/<int:request_id>` | Find offers matching request (radius & category) |
 
-bash
-Copy
-Edit
-flask db upgrade
-Start the app:
+---
 
-bash
-Copy
-Edit
-python run.py
+## 📈 Roadmap & Next Steps
 
+* Add **radius search** and geospatial matching.
+* Develop **reviews & ratings** for completed services.
+* Add **messaging / chat** between users.
+* Build a **frontend UI** (React/Vue) for better usability.
+* Deploy publicly (Render / Railway) with monitoring & CI.
 
+---
 
-🧪 API Endpoints
+## 🤝 Contributing & Community
 
-Authentication (open):
+Your contributions welcome!
 
-POST /auth/register – Register user
+* Please review open issues before creating new ones.
+* Write clear, atomic pull requests.
+* Include tests where relevant.
+* This repo serves not just as software, but as a **shared community-building tool**.
 
-POST /auth/login – Login and receive access_token
+---
 
-Profile (requires auth):
+## 🧾 License
 
-GET /auth/profile – Get current user info
+MIT License — see [LICENSE](LICENSE) for details.
 
-PUT /auth/profile – Update username/email
-
-PUT /auth/change-password – Update password securely
-
-Posts (requires auth):
-
-GET /posts/protected – Sample protected endpoint
-
-POST /posts – Create a post linked to authenticated user
-
-Make sure to include JWT token in headers as:
-
-makefile
-Copy
-Edit
-Authorization: Bearer <your_access_token>
-
-
-📈 Future Enhancements
-
-Add GET /posts, GET /posts/<id>, DELETE /posts/<id>
-
-Add pagination and filtering (e.g., posts by user)
-
-Add Jinja2 templates or a separate frontend (React, Vue, etc.)
-
-Deploy to Render or Railway with managed PostgreSQL
-
-Add tests using pytest and API documentation (Swagger/OpenAPI)
-
-✅ License & Contact
-Under MIT License.
-Feel free to contribute or ask questions!
-
+---
