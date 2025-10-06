@@ -34,6 +34,15 @@ def register():
     
     return jsonify({"message": "User registered successfully"}), 201
 
+def _verify_password(user, password):
+    if user is None:
+        return False
+    if hasattr(user, "verify_password"):
+        return user.verify_password(password)
+    if hasattr(user, "check_password"):
+        return user.check_password(password)
+    # fallback: assume user.password stores a hash
+    return check_password_hash(getattr(user, "password", ""), password)
 
 @auth_bp.route('/login', methods=['POST'])
 def login():
