@@ -444,6 +444,24 @@ After that, go back to psql and re-check with \dt and SELECT * FROM users.
 
 ---
 
-## October 4, 2025 and earlier entries
+## October 6, 2025 and earlier entries
 
-(continued historical entries...)
+Summary
+- Continued debugging failing test: tests/test_routes.py::test_create_post.
+- Test run: 12 passed, 1 failed — failing test raises KeyError: 'access_token'.
+
+What I changed today
+- Patched auth login handler to return {"access_token": ...} and to create token identity as a string.
+- Added a robust password verifier helper to accept verify_password, check_password, or raw-hash fallback.
+- Added a small debug script (scripts/debug_auth.py) to reproduce register/login via the Flask test client.
+- Documented venv troubleshooting steps and recommended running pytest via `python -m pytest` to avoid stale pytest.exe launchers.
+
+Current status
+- The login handler returns access_token in the edited file, but the test run still reports the same failing test locally (KeyError: 'access_token') — likely causes:
+  - The test environment is using a different/older code snapshot (stale import or broken venv).
+  - Register in the test fixture may be failing (duplicate user), preventing login from returning the token.
+  - Tests expect a specific response shape; confirm the login returns access_token key exactly.
+
+Notes
+- Venv issues: recreate venv and run `python -m pytest` to avoid the launcher error.
+- I recommend running the debug script first so we capture the exact register/login responses and fix the root cause.
