@@ -10,15 +10,15 @@ from flask_jwt_extended import JWTManager
 
 migrate = Migrate()
 
-def create_app(config_class=None):
+def create_app(config_object=None):
     app = Flask(__name__)
-    
-    if config_class is None:
+
+    if config_object is None:
         from config import DevelopmentConfig
         app.config.from_object(DevelopmentConfig)
     else:
-        app.config.from_object(config_class)
-        print("🔍 Running with config:", config_class.__name__)
+        app.config.from_object(config_object)
+        print("🔍 Running with config:", config_object.__name__)
         print("🔍 SQLALCHEMY_DATABASE_URI =", app.config.get("SQLALCHEMY_DATABASE_URI"))
 
     # Ensure JWT has a secret key configured (fallback to SECRET_KEY)

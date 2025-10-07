@@ -1,9 +1,79 @@
 from flask import Blueprint, request, jsonify
+from math import radians, cos, sin, asin, sqrt
 from flask_jwt_extended import create_access_token, jwt_required, get_jwt_identity
 from app.models import Post
 from app.extensions import db
 
+from app.models import Post
+from app.schemas import PostSchema
+
 posts_bp = Blueprint("posts", __name__, url_prefix="/posts")
+
+def _haversine_km(lat1, lon1, lat2, lon2):
+    if None in (lat1, lon1, lat2, lon2):
+        return None
+    R = 6371.0
+    dlat = radians(lat2 - lat1)
+    dlon = radians(lon2 - lon1)
+    a = sin(dlat / 2) ** 2 + cos(radians(lat1)) * cos(radians(lat2)) * sin(dlon / 2) ** 2
+    c = 2 * asin(sqrt(a))
+    return R * c
+
+
+@posts_bp.route("/", methods=["GET"])
+def list_posts():
+    """
+    Query params:
+    - user_id (int)         : filter by owner
+    - lat (float), lon (float), radius_km (float) : spatial filter (returns posts within radius)
+    If lat/lon/radius_km provided, uses bounding-box prefilter then exact Haversine distance.
+    """
+    q = Post.query
+    user_id = request.args.get("user_id", type=int)
+    if user_id:
+        q = q.filter_by(user_id=user_id)
+
+    lat = request.args.get("lat", type=float)
+    lon = request.args.get("lon", type=float)
+    radius_km = request.args.get("radius_km", type=float)
+
+    if lat is not None and lon is not None and radius_km is not None:
+        # cheap bounding-box prefilter to reduce candidates
+        lat_delta = radius_km / 111.32
+        lon_delta = radius_km / (111.32 * max(0.000001, abs(cos(radians(lat)))))
+
+        min_lat = lat - lat_delta
+        max_lat = lat + lat_delta
+        min_lon = lon - lon_delta
+        max_lon = lon + lon_delta
+
+        q = q.filter(
+            Post.latitude.isnot(None),
+            Post.longitude.isnot(None),
+            Post.latitude.between(min_lat, max_lat),
+            Post.longitude.between(min_lon, max_lon),
+        )
+
+        candidates = q.all()
+        nearby = []
+        for p in candidates:
+            d = _haversine_km(lat, lon, p.latitude, p.longitude)
+            if d is not None and d <= radius_km:
+                nearby.append((d, p))
+        nearby.sort(key=lambda x: x[0])
+        posts = [p for _, p in nearby]
+    else:
+        posts = q.all()
+
+    schema = PostSchema(many=True)
+    return jsonify(schema.dump(posts)), 200
+
+
+@posts_bp.route("/<int:post_id>", methods=["GET"])
+def get_post(post_id):
+    p = Post.query.get_or_404(post_id)
+    schema = PostSchema()
+    return jsonify(schema.dump(p)), 200
 
 @posts_bp.route("/posts", methods=['POST'], strict_slashes=False)
 @posts_bp.route("/", methods=['POST'], strict_slashes=False)
