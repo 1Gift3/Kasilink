@@ -23,22 +23,33 @@ def _haversine_km(lat1, lon1, lat2, lon2):
 @posts_bp.route("/", methods=["GET"])
 def list_posts():
     """
+    GET /posts
     Query params:
-    - user_id (int)         : filter by owner
-    - lat (float), lon (float), radius_km (float) : spatial filter (returns posts within radius)
-    If lat/lon/radius_km provided, uses bounding-box prefilter then exact Haversine distance.
+      - user_id (int)
+      - lat, lon, radius_km (floats) -> spatial filter (returns distance_km)
+      - page (int, default=1) & limit (int, default=20) -> offset/limit pagination
+      - Or cursor-based: ?after_id=<last_seen_id>&limit=20 (optional)
     """
     q = Post.query
     user_id = request.args.get("user_id", type=int)
     if user_id:
         q = q.filter_by(user_id=user_id)
 
+    # pagination params
+    page = max(1, request.args.get("page", type=int, default=1))
+    limit = request.args.get("limit", type=int, default=20)
+    limit = max(1, min(limit, 100))  # cap limit to 100
+    offset = (page - 1) * limit
+
+    # optional cursor pagination
+    after_id = request.args.get("after_id", type=int)
+
     lat = request.args.get("lat", type=float)
     lon = request.args.get("lon", type=float)
     radius_km = request.args.get("radius_km", type=float)
 
     if lat is not None and lon is not None and radius_km is not None:
-        # cheap bounding-box prefilter to reduce candidates
+        # bounding-box prefilter
         lat_delta = radius_km / 111.32
         lon_delta = radius_km / (111.32 * max(0.000001, abs(cos(radians(lat)))))
 
@@ -54,19 +65,50 @@ def list_posts():
             Post.longitude.between(min_lon, max_lon),
         )
 
-        candidates = q.all()
+        # apply cursor if provided (helps paginate deterministically by id)
+        if after_id:
+            q = q.filter(Post.id > after_id)
+
+        candidates = q.all()  # small result set after bbox; if large, consider SQL limit
         nearby = []
         for p in candidates:
             d = _haversine_km(lat, lon, p.latitude, p.longitude)
             if d is not None and d <= radius_km:
                 nearby.append((d, p))
-        nearby.sort(key=lambda x: x[0])
-        posts = [p for _, p in nearby]
-    else:
-        posts = q.all()
 
-    schema = PostSchema(many=True)
-    return jsonify(schema.dump(posts)), 200
+        nearby.sort(key=lambda x: x[0])
+        posts_slice = nearby[offset: offset + limit]
+        posts = []
+        for d, p in posts_slice:
+            item = PostSchema().dump(p)
+            item["distance_km"] = round(d, 3)
+            posts.append(item)
+
+        # metadata for client pagination
+        total_matches = len(nearby)
+        return jsonify({
+            "page": page,
+            "limit": limit,
+            "total": total_matches,
+            "items": posts
+        }), 200
+
+    # Non-spatial path: use offset/limit at SQL level for performance
+    if after_id:
+        q = q.filter(Post.id > after_id).order_by(Post.id.asc())
+        posts_objs = q.limit(limit).all()
+        # cursor-style response (next after_id can be last item's id)
+        next_after = posts_objs[-1].id if posts_objs else None
+        items = PostSchema(many=True).dump(posts_objs)
+        return jsonify({"after_id": next_after, "limit": limit, "items": items}), 200
+
+    posts_objs = q.order_by(Post.created_at.desc()).offset(offset).limit(limit).all()
+    items = PostSchema(many=True).dump(posts_objs)
+    return jsonify({
+        "page": page,
+        "limit": limit,
+        "items": items
+    }), 200
 
 
 @posts_bp.route("/<int:post_id>", methods=["GET"])

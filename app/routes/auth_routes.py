@@ -7,6 +7,23 @@ from datetime import timedelta
 
 auth_bp = Blueprint("auth", __name__, url_prefix="/auth")
 
+def _verify_password(user, password):
+    if user is None or not password:
+        return False
+    # prefer model helper if present
+    if hasattr(user, "verify_password"):
+        try:
+            return user.verify_password(password)
+        except TypeError:
+            pass
+    if hasattr(user, "check_password"):
+        try:
+            return user.check_password(password)
+        except TypeError:
+            pass
+    # fallback: assume user.password stores a hash
+    return check_password_hash(getattr(user, "password", "") or "", password)
+
 @auth_bp.route('/register', methods=['POST'])
 def register():
     data = request.get_json() or {}
@@ -27,22 +44,7 @@ def register():
     db.session.commit()
     return jsonify({"message": "User registered successfully", "id": user.id}), 201
 
-def _verify_password(user, password):
-    if user is None or not password:
-        return False
-    # prefer model helper if present
-    if hasattr(user, "verify_password"):
-        try:
-            return user.verify_password(password)
-        except TypeError:
-            pass
-    if hasattr(user, "check_password"):
-        try:
-            return user.check_password(password)
-        except TypeError:
-            pass
-    # fallback: assume user.password stores a hash
-    return check_password_hash(getattr(user, "password", "") or "", password)
+
 
 @auth_bp.route('/login', methods=['POST'])
 def login():
@@ -61,5 +63,7 @@ def login():
 
     access_token = create_access_token(identity=str(user.id))
     payload = {"access_token": access_token}
+    print("DEBUG_LOGIN_RESPONSE", payload, flush=True)
     current_app.logger.info("login response JSON: %s", payload)
     return jsonify(payload), 200
+
