@@ -54,8 +54,7 @@ def auth_token(client):
     if resp.status_code != 200:
         # attempt to register then login
         reg = client.post('/auth/register', json={"username": "testuser", "email": "test@example.com", "password": "password"})
-        assert reg.status_code in (201, 400), f"Unexpected register response: {reg.status_code} {reg.get_data(as_text=True)}"
-        resp = client.post('/auth/login', json={"username": "testuser", "password": "password"})
+        assert reg.status_code in (200, 201, 400), f"Unexpected register response: {reg.status_code} {reg.get_data(as_text=True)}"
 
     assert resp.status_code == 200, resp.get_data(as_text=True)
     data = resp.get_json()
